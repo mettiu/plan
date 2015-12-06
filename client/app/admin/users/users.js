@@ -6,12 +6,12 @@ angular.module('planApp')
       .state('users', {
         parent: 'master-app-layout-frame',
         url: '/users',
+        authenticate: true,
         views: {
           'main-content@master-app-layout': {
             templateUrl: 'app/admin/users/users.html',
             controller: 'UsersCtrl',
             controllerAs: 'UsersCtrl',
-            authenticate: true,
             resolve: UsersResolver
           }
         }

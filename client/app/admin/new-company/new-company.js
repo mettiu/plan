@@ -6,12 +6,12 @@ angular.module('planApp')
       .state('new-company', {
         parent: 'master-app-layout-frame',
         url: '/new-company',
+        authenticate: true,
         views: {
           'main-content@master-app-layout': {
             templateUrl: 'app/admin/new-company/new-company.html',
             controller: 'NewCompanyCtrl',
             controllerAs: 'NewCompanyCtrl',
-            authenticate: true,
             resolve: EditCompanyResolver
           }
         }

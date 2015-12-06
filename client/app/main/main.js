@@ -3,10 +3,11 @@
 angular.module('planApp')
   .config(function ($stateProvider) {
     $stateProvider
-      .state('frame.main', {
+      .state('main', {
+        parent: 'master-app-layout-frame',
         url: '/',
         views: {
-          "main-content": {
+          'main-content@master-app-layout': {
             templateUrl: 'app/main/main.html',
             controller: 'MainCtrl',
             controllerAs: 'MainCtrl',

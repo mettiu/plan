@@ -14,13 +14,12 @@ angular.module('planApp')
       // serve per non ripetere la navbar in ogni view
       .state('master-app-layout-frame', {
         parent: 'master-app-layout',
-        url: '',
         abstract: true,
         views: {
           "navbar": {
             controller: 'NavbarCtrl',
             controllerAs: 'NavbarCtrl',
-            templateUrl: 'components/navbar/navbar.html'
+            templateUrl: 'app/master-app-layout/navbar/navbar.html'
           }
         }
       });

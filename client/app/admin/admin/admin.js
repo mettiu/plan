@@ -11,7 +11,7 @@ angular.module('planApp')
             templateUrl: 'app/admin/admin/admin.html',
             controller: 'AdminCtrl',
             controllerAs: 'AdminCtrl',
-            authenticate: true,
+            authenticate: true
           }
         }
       });

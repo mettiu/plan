@@ -1,0 +1,23 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h1 class="page-header">Lista Feature</h1>
+
+      <div class="container">
+        <p><a href="/new-feature">Crea nuova feature</a></p>
+        <ul class="list-group">
+          <li class="list-group-item" ng-repeat="feature in FeaturesCtrl.features | orderBy:'tId'">
+            <div class="btn-group pull-right" role="group" aria-label="...">
+              <a ng-click="FeaturesCtrl.editFeature(feature)" class="btn btn-primary"><span
+                class="glyphicon glyphicon-edit"></span></a>
+              <a ng-click="FeaturesCtrl.deleteFeature(feature)" class="btn btn-danger"><span
+                class="glyphicon glyphicon-trash"></span></a>
+            </div>
+            {{feature.tId}} - <strong>{{feature.name}}</strong><br>
+            <span class="text-muted">{{feature.info}}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

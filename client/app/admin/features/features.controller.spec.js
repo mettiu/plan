@@ -7,13 +7,13 @@ describe('Controller: FeaturesCtrl', function () {
 
   var FeaturesCtrl, scope;
 
-  // Initialize the controller and a mock scope
-  beforeEach(inject(function ($controller, $rootScope) {
-    scope = $rootScope.$new();
-    FeaturesCtrl = $controller('FeaturesCtrl', {
-      $scope: scope
-    });
-  }));
+  //// Initialize the controller and a mock scope
+  //beforeEach(inject(function ($controller, $rootScope) {
+  //  scope = $rootScope.$new();
+  //  FeaturesCtrl = $controller('FeaturesCtrl', {
+  //    $scope: scope
+  //  });
+  //}));
 
   it('should ...', function () {
     expect(1).toEqual(1);

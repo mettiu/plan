@@ -9,6 +9,13 @@ var UserSchema = new Schema({
   name: String,
   email: { type: String, lowercase: true },
   _company: { type: Schema.Types.ObjectId, ref: 'Company' },
+  perms: [{
+    _company: { type: Schema.Types.ObjectId, ref: 'Company' },
+    perms: [{
+      type: String,
+      default: 'user'
+    }],
+  }],
   role: {
     type: String,
     default: 'user'

@@ -7,13 +7,13 @@ describe('Controller: CompaniesCtrl', function () {
 
   var CompaniesCtrl, scope;
 
-  // Initialize the controller and a mock scope
-  beforeEach(inject(function ($controller, $rootScope) {
-    scope = $rootScope.$new();
-    CompaniesCtrl = $controller('CompaniesCtrl', {
-      $scope: scope
-    });
-  }));
+  //// Initialize the controller and a mock scope
+  //beforeEach(inject(function ($controller, $rootScope) {
+  //  scope = $rootScope.$new();
+  //  CompaniesCtrl = $controller('CompaniesCtrl', {
+  //    $scope: scope
+  //  });
+  //}));
 
   it('should ...', function () {
     expect(1).toEqual(1);

@@ -1,5 +1,5 @@
 'use strict';
-
+//var _ = require('lodash');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var crypto = require('crypto');
@@ -9,12 +9,9 @@ var UserSchema = new Schema({
   name: String,
   email: { type: String, lowercase: true },
   _company: { type: Schema.Types.ObjectId, ref: 'Company' },
-  perms: [{
+  acls: [{
     _company: { type: Schema.Types.ObjectId, ref: 'Company' },
-    perms: [{
-      type: String,
-      default: 'user'
-    }],
+    role: { type: String }
   }],
   role: {
     type: String,
@@ -154,7 +151,49 @@ UserSchema.methods = {
     if (!password || !this.salt) return '';
     var salt = new Buffer(this.salt, 'base64');
     return crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64');
+  },
+
+  getUserRolesForCompany: function (companyId) {
+    var returnRoles = [];
+    for (var i = 0; i < this.acls.length; i++) {
+      if (this.acls[i]._company === companyId) returnRoles.push(this.acls[i].role);
+    }
+    return returnRoles;
+  },
+
+  hasAuthorizationForRoleAndCompanyId: function (role, companyId) {
+    function equalToReceived(acl) {
+      return (acl._company === companyId && acl.role === role);
+    }
+
+    return this.acls.filter(equalToReceived).length !== 0;
+  },
+
+  setUserRoleForCompany: function(role, companyId) {
+    if (this.hasAuthorizationForRoleAndCompanyId(role, companyId)) {
+      return false;
+    }
+    this.acls.push({_company: companyId, role: role });
+    return true;
+  },
+
+  setUserAcl: function(acl) {
+    if (checkAcl(acl)) return this.setUserRoleForCompany(acl.role, acl._company);
+    return false;
+  },
+
+  setUserAcls: function(acls) {
+    var insertedCounter = 0;
+    for (var i = 0; i < acls.length; i++) {
+      if (this.setUserAcl(acls[i])) insertedCounter++;
+    }
+    return insertedCounter;
   }
 };
+
+function checkAcl(acl) {
+  return !!(typeof acl === 'object' && acl.hasOwnProperty('_company') && acl.hasOwnProperty('role'));
+
+}
 
 module.exports = mongoose.model('User', UserSchema);

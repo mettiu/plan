@@ -22,7 +22,7 @@ angular.module('planApp')
 
     function editFeature(feature) {
       $log.info("edit", feature);
-      $state.go('frame.new-feature', {featureId: feature._id});
+      $state.go('new-feature', {featureId: feature._id});
     }
 
   });

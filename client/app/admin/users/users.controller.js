@@ -22,7 +22,7 @@ angular.module('planApp')
     }
 
     function editUser(user) {
-      $state.go('frame.new-user', {userId: user._id});
+      $state.go('new-user', {userId: user._id});
     }
 
   });

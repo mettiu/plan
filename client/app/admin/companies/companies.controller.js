@@ -21,7 +21,7 @@ angular.module('planApp')
     }
 
     function editCompany(company) {
-      $state.go('frame.new-company', {companyId: company._id});
+      $state.go('new-company', {companyId: company._id});
     }
 
   });

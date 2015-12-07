@@ -22,11 +22,11 @@ angular.module('planApp')
       if (!vm.editStatus) {
 
         vm.company.$save(function () {
-          $state.go('frame.main');
+          $state.go('main');
         });
       } else {
         vm.company.$update(function () {
-          $state.go('frame.main');
+          $state.go('main');
         })
       }
     }

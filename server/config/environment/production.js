@@ -18,7 +18,7 @@ module.exports = {
     uri:    process.env.MONGOLAB_URI ||
             process.env.MONGOHQ_URL ||
             process.env.OPENSHIFT_MONGODB_DB_URL+process.env.OPENSHIFT_APP_NAME ||
-            //'mongodb://localhost/plan'
-            'mongodb://plan_user:plan_secret@192.168.2.13/plan'
+            'mongodb://localhost/plan'
+
   }
 };

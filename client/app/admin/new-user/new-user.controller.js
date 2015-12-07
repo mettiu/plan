@@ -63,11 +63,11 @@ angular.module('planApp')
     function update() {
       if (!vm.editStatus) {
         vm.user.$save(function () {
-          $state.go('frame.main');
+          $state.go('main');
         });
       } else {
         vm.user.$update(function () {
-          $state.go('frame.main');
+          $state.go('main');
         })
       }
     }

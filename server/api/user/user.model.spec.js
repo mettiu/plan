@@ -27,7 +27,7 @@ for (var i = 0; i < companyArraySize; i++) {
 
 describe('User Model with Company', function () {
   before(function (done) {
-    // Clear users before testing
+    // Clear users and companies before testing
     User.remove().exec().then(function () {
       Company.remove().exec().then(function () {
         done();
@@ -35,11 +35,14 @@ describe('User Model with Company', function () {
     });
   });
 
-  //afterEach(function(done) {
-  //  User.remove().exec().then(function() {
-  //    done();
-  //  });
-  //});
+  after(function(done) {
+    // Clear users and companies after testing
+    User.remove().exec().then(function() {
+      Company.remove().exec().then(function () {
+        done();
+      });
+    });
+  });
 
   it('should begin with no users and no companies', function (done) {
     User.find({}, function (err, users) {

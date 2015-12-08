@@ -6,7 +6,7 @@ var crypto = require('crypto');
 var ms = require('ms');
 var TOKEN_EXPIRATION_MS = ms('1d'); // token expiration date is 1 day
 var TOKEN_DELETION_DELAY_AFTER_EXPIRATION = ms('5m'); // tokens are deleted 5 min after expiration
-var TOKEN_LENGTH = 20;
+var TOKEN_LENGTH = 30;
 
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
@@ -14,7 +14,7 @@ var mongoose = require('mongoose'),
 var TokenSchema = new Schema({
   token: {
     type: String,
-    default: crypto.randomBytes(TOKEN_LENGTH).toString('hex').toUpperCase(),
+    default: crypto.randomBytes(TOKEN_LENGTH).toString('base64').toUpperCase(),
     minLength: TOKEN_LENGTH,
     maxLength: TOKEN_LENGTH
   },

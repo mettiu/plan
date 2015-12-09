@@ -50,7 +50,7 @@ TokenSchema
 
   findToken: function (token, userId, cb) {
     return this.findOne({token: token, _user: userId, fired: false}, cb);
-  },
+  }
 
 };
 

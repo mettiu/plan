@@ -116,6 +116,19 @@ UserSchema
   });
 
 /**
+ * Statics
+ */
+UserSchema
+  .statics = {
+
+  findByEmail: function (email, cb) {
+    var xxx = this.findOne({email: email}, cb);
+    return xxx;
+  }
+
+};
+
+/**
  * Methods
  */
 UserSchema.methods = {

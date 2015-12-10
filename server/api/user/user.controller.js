@@ -128,18 +128,33 @@ exports.update = function (req, res) {
 };
 
 //
-exports.lostpassword = function (req, res) {
-  //console.log(req.body.email);
-  // TODO: create a middleware to chek if json received contains email field
-  var email = req.body.email;
-  User.findByEmail(req.body.email, function(err, item) {
-    console.log(item);
-    if (err) return handleError(res, err); // TODO: capire come funziona handleError!!
-    if (!item) return res.status('404').send('Not Found');
-    //Token.createTokenForUser(item._id, 'lostPassword')
-    // TODO: far sì che venga restituito il token
-    return res.status(200).json(item);
-  })
+exports.lostPassword = function (req, res) {
+  if (!req.query.t) { // if a token was NOT provided, user is requesting a new token
+    // TODO: create a middleware to chek if json received contains email field
+    var email = req.body.email;
+    User.findByEmail(req.body.email, function (err, item) {
+      if (err) return handleError(res, err); // TODO: capire come funziona handleError!!
+      if (!item) return res.status('404').send('Not Found');
+      var token = new Token({_user: item._id, type: 'lostPassword'});
+      token.save(function (err, savedItem, numAffected) {
+        if (err) return handleError(res, err); // TODO: capire come funziona handleError!!
+        // TODO: inviare il token via email
+        console.log("email inviata con link al token: http://xxxxx.xxx.xx/ANGULAR-ROUTE?t=" + savedItem.token);
+        res.status(200).send('OK');
+      });
+    });
+  } else {
+    // if a token was provided, user loaded angula page for checktoken rouet
+    // which posted token here to check and fire it
+
+    Token.findToken(req.query.t, function(err, item) {
+
+      if (err) res.status(404).send('Not Found');
+      if (!item) return res.status(200).send({result: false});
+      item.fire();
+      return res.status(200).json({result: true});
+    });
+  }
 };
 
 

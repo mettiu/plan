@@ -2,6 +2,7 @@
 
 var should = require('should');
 var faker = require('faker');
+var request = require('supertest');
 faker.locale = "it";
 var app = require('../../app');
 var User = require('./user.model');
@@ -35,9 +36,9 @@ describe('User Model with Company', function () {
     });
   });
 
-  after(function(done) {
+  after(function (done) {
     // Clear users and companies after testing
-    User.remove().exec().then(function() {
+    User.remove().exec().then(function () {
       Company.remove().exec().then(function () {
         done();
       });
@@ -175,9 +176,11 @@ describe('User Model with Company', function () {
   });
 
   it('should fail when saving without an email', function (done) {
+    var previousEmail = user.email;
     user.email = '';
     user.save(function (err) {
       should.exist(err);
+      user.email = previousEmail;
       done();
     });
   });
@@ -189,5 +192,46 @@ describe('User Model with Company', function () {
   it("should not authenticate user if password is invalid", function () {
     return user.authenticate('blah').should.not.be.true;
   });
+
+  it("should find user by email", function (done) {
+    var foundUser = User.findByEmail(user.email, function (err, item) {
+      if (err) return done(err);
+      item.should.be.instanceOf(Object);
+      item.should.have.property('_id');
+      item._id.toString().should.be.equal(user._id.toString());
+      done();
+    })
+  });
+
+  it("should not find user by email if a unexistant email is provided", function (done) {
+    var foundUser = User.findByEmail('fake-wrong-email@example.com', function (err, item) {
+      if (err) return done(err);
+      should.not.exist(item);
+      done();
+    })
+  });
+
+  it("should get a valid token for a registered email", function (done) {
+    request(app)
+      .post('/api/users/lostpassword')
+      .send({email: user.email})
+      .expect(200)
+      .end(function (err, res) {
+        if (err) return done(err);
+        done();
+      });
+  });
+
+  it("should not get a valid token for a fake email", function (done) {
+    request(app)
+      .post('/api/users/lostpassword')
+      .send({email: 'fake-email-not-exist@example.com'})
+      .expect(404)
+      .end(function (err, res) {
+        if (err) return done(err);
+        done();
+      });
+  });
+
 
 });

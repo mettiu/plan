@@ -14,7 +14,7 @@ module.exports = function(app) {
   app.use('/api/features', require('./api/feature'));
   app.use('/api/things', require('./api/thing'));
   app.use('/api/users', require('./api/user'));
-  app.use('/api/tokens', require('./api/token')); // actually, no route is connected to this path (404).
+  //app.use('/api/tokens', require('./api/token')); // actually, no route is connected to this path (404).
                                                   // Inserted only for structural cleanliness
 
   app.use('/auth', require('./auth'));

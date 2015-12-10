@@ -2,9 +2,11 @@
 
 var _ = require('lodash');
 var User = require('./user.model');
+var Token = require('../token/token.model');
 var passport = require('passport');
 var config = require('../../config/environment');
 var jwt = require('jsonwebtoken');
+var token
 
 var validationError = function (res, err) {
   return res.status(422).json(err);
@@ -123,6 +125,21 @@ exports.update = function (req, res) {
       return res.status(200).json(user);
     });
   });
+};
+
+//
+exports.lostpassword = function (req, res) {
+  //console.log(req.body.email);
+  // TODO: create a middleware to chek if json received contains email field
+  var email = req.body.email;
+  User.findByEmail(req.body.email, function(err, item) {
+    console.log(item);
+    if (err) return handleError(res, err); // TODO: capire come funziona handleError!!
+    if (!item) return res.status('404').send('Not Found');
+    //Token.createTokenForUser(item._id, 'lostPassword')
+    // TODO: far sì che venga restituito il token
+    return res.status(200).json(item);
+  })
 };
 
 

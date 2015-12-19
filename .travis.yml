@@ -1,11 +1,15 @@
+env:
+  - CXX=g++-4.8
 language: node_js
 node_js:
-  - "4.1"
-  - "4.0"
-  - "0.12"
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install libkrb5-dev
+  - "4"
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.8
+    - g++-4.8
 before_script:
   - npm install -g bower grunt-cli
   - bower install

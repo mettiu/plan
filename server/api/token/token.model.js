@@ -18,7 +18,11 @@ var TokenSchema = new Schema({
     minlength: TOKEN_LENGTH,
     maxlength: TOKEN_LENGTH
   },
-  _user: {type: Schema.Types.ObjectId, ref: 'User'},
+  _user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   creationDate: {type: Date, default: Date.now()},
   expirationDate: {
     type: Date,

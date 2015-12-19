@@ -2,7 +2,8 @@
 
 // good ideas here: http://sahatyalkabov.com/how-to-implement-password-reset-in-nodejs/
 
-var crypto = require('crypto');
+//var crypto = require('crypto');
+var randomString = require('randomstring');
 var ms = require('ms');
 var TOKEN_EXPIRATION_MS = ms('1d'); // token expiration date is 1 day
 var TOKEN_DELETION_DELAY_AFTER_EXPIRATION = ms('5m'); // tokens are deleted 5 min after expiration
@@ -14,9 +15,10 @@ var mongoose = require('mongoose'),
 var TokenSchema = new Schema({
   token: {
     type: String,
-    default: randomAsciiString(TOKEN_LENGTH), //crypto.randomBytes(TOKEN_LENGTH).toString('base64').toUpperCase(),
-    minLength: TOKEN_LENGTH,
-    maxLength: TOKEN_LENGTH
+
+//    default: randomString.generate(TOKEN_LENGTH), //randomAsciiString(TOKEN_LENGTH), //crypto.randomBytes(TOKEN_LENGTH).toString('base64').toUpperCase(),
+    minlength: TOKEN_LENGTH,
+    maxlength: TOKEN_LENGTH
   },
   _user: {type: Schema.Types.ObjectId, ref: 'User'},
   creationDate: {type: Date, default: Date.now()},
@@ -27,8 +29,8 @@ var TokenSchema = new Schema({
   },
   type: {
     type: String,
-    minLength: 3,
-    maxLength: 20
+    minlength: 3,
+    maxlength: 20
   },
   fired: {
     type: Boolean,
@@ -49,7 +51,24 @@ TokenSchema
   .statics = {
 
   findToken: function (token, cb) {
-    return this.findOne({token: token, fired: false}, cb);
+    //console.log("findToken: " + token);
+    this.findOne({token: token}, cb);
+    //this.findOne({email: email}, cb);
+  },
+
+  findValidToken: function (token, cb) {
+    //console.log("findToken: " + token);
+    this.findOne({token: token}, function(err, item) {
+      if (err) return cb(err, null);
+      if (!item || !item.isValid) return cb(null, null);
+      return cb(null, item);
+    });
+    //this.findOne({email: email}, cb);
+  },
+
+  createNew: function (model, callback) {
+    model.token= randomString.generate(TOKEN_LENGTH);
+    return (new this(model)).save(callback);
   }
 
 };
@@ -77,40 +96,41 @@ TokenSchema
   //  return this.token;
   //},
 
-  fire: function () {
+  fire: function (callback) {
     this.fired = true;
+    this.save(callback);
   }
 
 };
 
 module.exports = mongoose.model('Token', TokenSchema);
 
-/** Sync */
-function randomString(length, chars) {
-  if(!chars) {
-    throw new Error('Argument \'chars\' is undefined');
-  }
-
-  var charsLength = chars.length;
-  if (charsLength > 256) {
-    throw new Error('Argument \'chars\' should not have more than 256 characters'
-      + ', otherwise unpredictability will be broken');
-  }
-
-  var randomBytes = crypto.randomBytes(length);
-  var result = new Array(length);
-
-  var cursor = 0;
-  for (var i = 0; i < length; i++) {
-    cursor += randomBytes[i];
-    result[i] = chars[cursor % charsLength];
-  }
-
-  return result.join('');
-}
-
-/** Sync */
-function randomAsciiString(length) {
-  return randomString(length,
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
-}
+///** Sync */
+//function randomString(length, chars) {
+//  if (!chars) {
+//    throw new Error('Argument \'chars\' is undefined');
+//  }
+//
+//  var charsLength = chars.length;
+//  if (charsLength > 256) {
+//    throw new Error('Argument \'chars\' should not have more than 256 characters'
+//      + ', otherwise unpredictability will be broken');
+//  }
+//
+//  var randomBytes = crypto.randomBytes(length);
+//  var result = new Array(length);
+//
+//  var cursor = 0;
+//  for (var i = 0; i < length; i++) {
+//    cursor += randomBytes[i];
+//    result[i] = chars[cursor % charsLength];
+//  }
+//
+//  return result.join('');
+//}
+//
+///** Sync */
+//function randomAsciiString(length) {
+//  return randomString(length,
+//    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
+//}

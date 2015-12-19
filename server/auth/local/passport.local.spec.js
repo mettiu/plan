@@ -6,6 +6,7 @@ var jwt = require('jsonwebtoken');
 var app = require('../../app');
 var config = require('../../config/environment');
 var User = require('../../api/user/user.model');
+var Token = require('../../api/token/token.model');
 
 var user = new User({
   provider: 'local',
@@ -25,7 +26,10 @@ describe('Passport local strategy test', function () {
   after(function (done) {
     // Clear users and companies after testing
     User.remove().exec().then(function () {
-      done();
+      Token.remove().exec().then(function(){
+        done();
+      })
+
     });
   });
 

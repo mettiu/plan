@@ -18,3 +18,8 @@ module.exports[404] = function pageNotFound(req, res) {
     res.render(viewFilePath);
   });
 };
+
+module.exports[500] = function serverError(res, err) {
+  console.log(err);
+  res.status(500).send('Internal Server Error');
+};

@@ -69,7 +69,7 @@ describe('User Model with Company', function () {
     done();
   });
 
-  it('should save the fake user', function (done) {
+  it('should save the test user', function (done) {
     user.acls = [
       {_company: companyArray[0]._id, role: 'fakeRole-1'},
       {_company: companyArray[1]._id, role: 'fakeRole-2'}
@@ -210,28 +210,5 @@ describe('User Model with Company', function () {
       done();
     })
   });
-
-  it("should get a valid token for a registered email", function (done) {
-    request(app)
-      .post('/api/users/lostpassword')
-      .send({email: user.email})
-      .expect(200)
-      .end(function (err, res) {
-        if (err) return done(err);
-        done();
-      });
-  });
-
-  it("should not get a valid token for a fake email", function (done) {
-    request(app)
-      .post('/api/users/lostpassword')
-      .send({email: 'fake-email-not-exist@example.com'})
-      .expect(404)
-      .end(function (err, res) {
-        if (err) return done(err);
-        done();
-      });
-  });
-
 
 });

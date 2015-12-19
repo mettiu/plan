@@ -1,12 +1,13 @@
-//'use strict';
-//
-//var express = require('express');
-//var controller = require('./token.controller');
-//var config = require('../../config/environment');
-//var auth = require('../../auth/auth.service');
-//
-//var token = express.Router();
-//
-//// no routes for token!
-//
-//module.exports = token;
+'use strict';
+
+var express = require('express');
+var controller = require('./token.controller');
+var config = require('../../config/environment');
+
+var router = express.Router();
+
+router.post('/issue', controller.issue);
+router.get('/check', controller.check);
+router.post('/passwordChange', controller.passwordChange);
+
+module.exports = router;

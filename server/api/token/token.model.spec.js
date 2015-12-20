@@ -498,15 +498,39 @@ describe('Token Model', function () {
           done();
         });
     });
-
+// ***************************************************************************************************************************
     it("should return 403 if wrong token is passed to /passwordChange", function (done) {
       request(app)
         .post('/api/tokens/passwordChange')
         .expect(403)
-        .send({token: 'fake-token'})
+        .send({token: 'fake-token', password: 'new-password'})
         .end(function (err, res) {
           if (err) return done(err);
           done();
+        });
+    });
+
+    it("should return 403 if /passwordChange is callen without new password", function (done) {
+      request(app)
+        .post('/api/tokens/issue')
+        .send({email: user.email})
+        .expect(200)
+        .end(function (err, res) {
+          Token.findOne({_user: user._id}, function (err, foundToken) {
+            if (err) return done(err);
+
+            expect(foundToken).to.have.property('isValid')
+              .and.be.equal(true);
+
+            request(app)
+              .post('/api/tokens/passwordChange')
+              .send({token: foundToken.token})
+              .expect(403)
+              .end(function (err, res) {
+                if (err) return done(err);
+                  return done();
+              });
+          });
         });
     });
 

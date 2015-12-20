@@ -63,8 +63,7 @@ exports.check = function (req, res) {
 };
 
 exports.passwordChange = function (req, res) {
-  if (!req.body || !req.body.token /*|| !req.body.password*/) return res.status(403).send('Forbidden');
-  // TODO: verificare anche la password!!
+  if (!req.body || !req.body.token || !req.body.password) return res.status(403).send('Forbidden');
 
   var locals = {};
   async.series([

@@ -59,6 +59,7 @@ describe('Passport local strategy test', function () {
       .expect('Content-Type', /json/)
       .end(function(err, res) {
         if (err) return done(err);
+        //console.log(res.body);
         res.body.should.be.instanceOf(Object);
         res.body.should.have.property('token');
         jwt.verify(res.body.token, config.secrets.session, function(err, decoded) {

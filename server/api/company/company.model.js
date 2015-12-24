@@ -9,4 +9,18 @@ var CompanySchema = new Schema({
   active: Boolean
 });
 
+
+/**
+ * Statics
+ */
+CompanySchema
+  .statics = {
+
+  createNew: function (model, callback) {
+    (new this(model)).save(callback);
+  }
+
+};
+
+
 module.exports = mongoose.model('Company', CompanySchema);

@@ -170,7 +170,6 @@ function validateCategoriesOrTeams (validationArray, respond, fieldArray, selfDo
     if (count < validationArray.length) return respond(false);
     return respond(true);
   });
-
 }
 
 var validatePresenceOf = function (value) {
@@ -271,6 +270,15 @@ function checkAcl(acl) {
 }
 
 // TODO: bring this to a service module
+/**
+ * Takes an array of objects and removes from it all the duplicates entries. The objects in the array
+ * must have one only level of fields. So this function works only with arrays of objects, where these
+ * objects only contain basic types (i.e: strings, numbers, etc.). All the objects in the array must have
+ * the same structure and the fields must be listed in fieldArray parameter.
+ *
+ * @param arr The array containinng duplicated that should be removed
+ * @param fieldArray List of the array objects field names
+ */
 function removeDuplicates(arr, fieldArray) {
   // save a copy of the array and uniq the copy into a temp variable
   var temp = _.uniq(_.clone(arr), function (item) {

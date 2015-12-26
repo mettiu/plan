@@ -37,16 +37,16 @@ var TeamSchema = new Schema({
 var UserSchema = new Schema({
   name: String,
   email: {type: String, lowercase: true},
-  companies: [{
+  _companies: [{ // companies that the user is allower to work for
     type: Schema.Types.ObjectId,
     ref: 'Company'
   }],
-  teams: [ TeamSchema ],
-  categories: [{
+  teams: [ TeamSchema ], // teams that the user is member of
+  supplyCategories: [ SupplyCategoriesSchema ], // supply categories that the user is allowed to work for
+  _adminCompanies: [{ // companies that the user is admin for
     type: Schema.Types.ObjectId,
-    ref: 'Category'
+    ref: 'Company'
   }],
-  supplyCategories: [ SupplyCategoriesSchema ],
   hashedPassword: String,
   provider: String,
   salt: String,
@@ -55,7 +55,6 @@ var UserSchema = new Schema({
   google: {},
   github: {}
 });
-
 
 /**
  * Virtuals
@@ -153,8 +152,8 @@ function validateCategoriesOrTeams (validationArray, respond, fieldArray, selfDo
   removeDuplicates(validationArray, fieldArray);
   // get the list of companies involved for which user have al least one category
   var supplyCategoriesOrTeamsCompaniesArray = _.uniq(_.pluck(validationArray, '_company'));
-  // get intersection between these companies and the list of companies the user is allowed to work for
-  var intersection = _.intersection(supplyCategoriesOrTeamsCompaniesArray, selfDocument._doc.companies);
+  // get intersection between these companies and the list of _companies the user is allowed to work for
+  var intersection = _.intersection(supplyCategoriesOrTeamsCompaniesArray, selfDocument._doc._companies);
   // Supply categories (or teams) set should be contained into company list set:
   // so intesection should be equal to supply categories set. Otherwise, there is a category/company (or team/company)
   // whose company is not allowed for user
@@ -279,15 +278,13 @@ function removeDuplicates(arr, fieldArray) {
     fieldArray.forEach(function (element) {
       returnString += item[element];
     });
-    return returnString; //item['_company'].toString() + item['_category'].toString();
+    return returnString;
   });
-  //console.log('[' + arr.length + ',' + temp.length + ']');
   //empty the original array
   arr.splice(0, arr.length);
-  // push into the origina array the uniq-ed array
-  for (var i = 0; i < temp.length; i++) {
-    arr.push(temp[i]);
-  }
+  temp.forEach(function(currentValue) {
+    arr.push(currentValue);
+  });
   // if we don't do in this way, all the references to the array (user in other parts of mongoose framework)
   // does not point to the new array. Array substitution creates a new variable and the other references are lost!
 }

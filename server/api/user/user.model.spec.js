@@ -198,8 +198,8 @@ describe('User Model', function () {
                     liquidTeam = savedLiquidTeam;
 
                     var localUserTemplate = _.clone(userTemplate);
-                    localUserTemplate.companies = [];
-                    localUserTemplate.companies.push(metalCompany._id);
+                    localUserTemplate._companies = [];
+                    localUserTemplate._companies.push(metalCompany._id);
                     User.createNew(localUserTemplate, function (err, savedItem) {
                       if (err) return done(err);
                       user = savedItem;

@@ -37,11 +37,6 @@ var TeamSchema = new Schema({
 var UserSchema = new Schema({
   name: String,
   email: {type: String, lowercase: true},
-  _company: {type: Schema.Types.ObjectId, ref: 'Company'}, // DEPRECATED
-  role: { // DEPRECATED
-    type: String,
-    default: 'user'
-  },
   companies: [{
     type: Schema.Types.ObjectId,
     ref: 'Company'
@@ -52,8 +47,6 @@ var UserSchema = new Schema({
     ref: 'Category'
   }],
   supplyCategories: [ SupplyCategoriesSchema ],
-
-  //],
   hashedPassword: String,
   provider: String,
   salt: String,

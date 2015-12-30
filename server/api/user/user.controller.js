@@ -1,5 +1,6 @@
 'use strict';
 
+var mongoose = require('mongoose');
 var _ = require('lodash');
 var User = require('./user.model');
 var Token = require('../token/token.model');
@@ -10,6 +11,18 @@ var jwt = require('jsonwebtoken');
 
 var validationError = function (res, err) {
   return res.status(422).json(err);
+};
+
+var handleError = function (res, err) {
+  switch (err.name) {
+    case 'ValidationError':
+      return res.status(422).json(err);
+      break;
+    default:
+      res.status(500).send('Server Error');
+      throw err;
+      break;
+  }
 };
 
 /**
@@ -43,12 +56,6 @@ exports.create = function (req, res, next) {
  */
 exports.show = function (req, res, next) {
   var userId = req.params.id;
-
-  //User.findById(userId, function (err, user) {
-  //  if (err) return next(err);
-  //  if (!user) return res.status(401).send('Unauthorized');
-  //  res.json(user.profile);
-  //})
 
   User.findById(userId)
     .populate('_company')
@@ -127,35 +134,24 @@ exports.update = function (req, res) {
   });
 };
 
-//
-//exports.lostPassword = function (req, res) {
-//  if (!req.query.t) { // if a token was NOT provided, user is requesting a new token
-//    // TODO: create a middleware to chek if json received contains email field
-//    var email = req.body.email;
-//    User.findByEmail(req.body.email, function (err, item) {
-//      if (err) return handleError(res, err); // TODO: capire come funziona handleError!!
-//      if (!item) return res.status('404').send('Not Found');
-//      var token = new Token({_user: item._id, type: 'lostPassword'});
-//      token.save(function (err, savedItem, numAffected) {
-//        if (err) return handleError(res, err); // TODO: capire come funziona handleError!!
-//        // TODO: inviare il token via email
-//        console.log("email inviata con link al token: http://xxxxx.xxx.xx/ANGULAR-ROUTE?t=" + savedItem.token);
-//        res.status(200).send('OK');
-//      });
-//    });
-//  } else {
-//    // if a token was provided, user loaded angula page for checktoken rouet
-//    // which posted token here to check and fire it
-//
-//    Token.findToken(req.query.t, function(err, item) {
-//
-//      if (err) res.status(404).send('Not Found');
-//      if (!item) return res.status(200).send({result: false});
-//      item.fire();
-//      return res.status(200).json({result: true});
-//    });
-//  }
-//};
+
+exports.setSupplyCategory = function (req, res) {
+
+  User.findById(req.body.addressedUserId, function (err, user) {
+    if (err || !user) return handleError(res, err);
+
+    _.forEach(req.body.newSupplyCategoryIds, function (newSupplyCategoryId) {
+      user.supplyCategories.push({
+        _company: mongoose.Types.ObjectId(req.body.addressedCompanyId),
+        _category: mongoose.Types.ObjectId(newSupplyCategoryId)
+      });
+    });
+    user.save(function(err) {
+      if (err) return handleError(res, err);
+      return res.status(200).json({result: 'OK'});
+    });
+  });
+};
 
 
 /**

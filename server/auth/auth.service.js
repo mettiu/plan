@@ -6,8 +6,9 @@ var config = require('../config/environment');
 var jwt = require('jsonwebtoken');
 var expressJwt = require('express-jwt');
 var compose = require('composable-middleware');
+var _ = require('lodash');
 var User = require('../api/user/user.model');
-var validateJwt = expressJwt({ secret: config.secrets.session });
+var validateJwt = expressJwt({secret: config.secrets.session});
 
 /**
  * Attaches the user object to the request if authenticated
@@ -15,17 +16,17 @@ var validateJwt = expressJwt({ secret: config.secrets.session });
  */
 function isAuthenticated() {
   return compose()
-    // Validate jwt
-    .use(function(req, res, next) {
+  // Validate jwt
+    .use(function (req, res, next) {
       // allow access_token to be passed through query parameter as well
-      if(req.query && req.query.hasOwnProperty('access_token')) {
+      if (req.query && req.query.hasOwnProperty('access_token')) {
         req.headers.authorization = 'Bearer ' + req.query.access_token;
       }
       validateJwt(req, res, next);
 
     })
     // Attach user to request
-    .use(function(req, res, next) {
+    .use(function (req, res, next) {
       User.findById(req.user._id, function (err, user) {
 
         if (err) return next(err);
@@ -59,20 +60,61 @@ function hasRole(roleRequired) {
  * Returns a jwt token signed by the app secret
  */
 function signToken(id) {
-  return jwt.sign({ _id: id }, config.secrets.session, { expiresIn: 60*60*5 });
+  return jwt.sign({_id: id}, config.secrets.session, {expiresIn: 60 * 60 * 5});
 }
 
 /**
  * Set token cookie directly for oAuth strategies
  */
 function setTokenCookie(req, res) {
-  if (!req.user) return res.status(404).json({ message: 'Something went wrong, please try again.'});
+  if (!req.user) return res.status(404).json({message: 'Something went wrong, please try again.'});
   var token = signToken(req.user._id, req.user.role);
   res.cookie('token', JSON.stringify(token));
   res.redirect('/');
+}
+
+/**
+ * Check if user is allowed to admin the addressed company
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
+function isAdminForCompany(req, res, next) {
+  // check if user can add categories to other users for addressed company
+  // is requester user admin for addressed company?
+  var found = _.find(req.user._adminCompanies, function (item) {
+    return item.toString() === req.body.addressedCompanyId;
+  });
+  if (!found) return res.status(422).send('Unprocessable Entity');
+  next();
+}
+
+/**
+ * Check if addressedUser is enabled for the addressedCompany
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
+function isAddressedUserEnabledForAddressedCompany(req, res, next) {
+  // check if user can manage addressed user to add the addressed company to user
+  // is addressed user member of the addressed company?
+  // search user with addressedUser Id AND
+  // _companies enabled containing addressed company
+  User.count({
+    '_id': req.body.addressedUserId,
+    '_companies': req.body.addressedCompanyId
+  }, function (err, result) {
+    if (err) throw err;
+    if (result !== 1) return res.status(422).send('Unprocessable Entity');
+    next();
+  });
 }
 
 exports.isAuthenticated = isAuthenticated;
 exports.hasRole = hasRole;
 exports.signToken = signToken;
 exports.setTokenCookie = setTokenCookie;
+exports.isAdminForCompany = isAdminForCompany;
+exports.isAddressedUserEnabledForAddressedCompany = isAddressedUserEnabledForAddressedCompany;

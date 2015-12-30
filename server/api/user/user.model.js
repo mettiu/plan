@@ -41,12 +41,12 @@ var UserSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Company'
   }],
-  teams: [ TeamSchema ], // teams that the user is member of
-  supplyCategories: [ SupplyCategoriesSchema ], // supply categories that the user is allowed to work for
   _adminCompanies: [{ // companies that the user is admin for
     type: Schema.Types.ObjectId,
     ref: 'Company'
   }],
+  teams: [ TeamSchema ], // teams that the user is member of
+  supplyCategories: [ SupplyCategoriesSchema ], // supply categories that the user is allowed to work for
   hashedPassword: String,
   provider: String,
   salt: String,
@@ -136,33 +136,48 @@ UserSchema
   }, 'The specified supply categories are not valid.');
 
 // Validate Teams
+// checks if user can work for ALL the companies listed and
+// checks if category/team exists for that company
 UserSchema
   .path('teams')
   .validate(function (supplyTeamsArray, respond) {
     validateCategoriesOrTeams(supplyTeamsArray, respond, ['_company', '_team'], this, Team);
   }, 'The specified teams are not valid.');
 
-// fieldArray shuld containf the name of the fields of supplyCategory or Team.
+// fieldArray shuld contain the name of the fields of supplyCategory or Team.
 // the order matters! first is company id field, second is team/category id field!!
 function validateCategoriesOrTeams (validationArray, respond, fieldArray, selfDocument, obj) {
+
   // nothing to do...
   if (!validationArray.length) return respond(true);
 
   // otherwise, let's work!
   removeDuplicates(validationArray, fieldArray);
-  // get the list of companies involved for which user have al least one category
-  var supplyCategoriesOrTeamsCompaniesArray = _.uniq(_.pluck(validationArray, '_company'));
-  // get intersection between these companies and the list of _companies the user is allowed to work for
-  var intersection = _.intersection(supplyCategoriesOrTeamsCompaniesArray, selfDocument._doc._companies);
+
+  // convert validation array into an array of strings representing the _company ids
+  // getting the list of companies involved for which user have al least one category
+  var accessibleElementsForCompany = [];
+  validationArray.forEach(function(element){
+    accessibleElementsForCompany.push(element._company.toString());
+  });
+  accessibleElementsForCompany = _.uniq(accessibleElementsForCompany);
+
+  // extract from user the array of _company ids for which the user is allowed to work for
+  var _companiesStringArray = [];
+  selfDocument._doc._companies.forEach(function(value) {
+    _companiesStringArray.push(value.toString());
+  });
+
+  // get intersection between these arrays of companies
+  var intersection = _.intersection(accessibleElementsForCompany, _companiesStringArray);
   // Supply categories (or teams) set should be contained into company list set:
   // so intesection should be equal to supply categories set. Otherwise, there is a category/company (or team/company)
   // whose company is not allowed for user
-  if (intersection.length !== supplyCategoriesOrTeamsCompaniesArray.length) return respond(false);
+  if (intersection.length !== accessibleElementsForCompany.length) return respond(false);
 
   // now let's check if the categories (or teams) exist and are linked to user's companies
   var expressionArray = [];
   validationArray.forEach(function(element) {
-    //expressionArray.push({'_id': element._category, '_company': element._company});
     expressionArray.push({'_id': element[fieldArray[1]], '_company': element[fieldArray[0]]});
   });
   obj.count({$or: expressionArray}, function (err, count) {

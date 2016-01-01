@@ -25,9 +25,7 @@ exports.create = function (req, res) {
  */
 exports.index = function (req, res) {
   var query = {};
-  //console.log(req.body.active !== undefined && typeof(req.body.active) === "boolean");
   if (req.body.active !== undefined && typeof(req.body.active) === "boolean") query = {active: req.body.active};
-  console.log(query);
   Company.find(query, function (err, companys) {
     if (err) {
       return handleError(res, err);

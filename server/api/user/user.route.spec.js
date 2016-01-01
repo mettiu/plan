@@ -98,12 +98,17 @@ describe('Test setSupplyCategory and setTeam', function () {
 
     var tokenCookieString = '';
 
-    var message = {
+    var catMessage = {
       addressedUserId: null,
       addressedCompanyId: null,
       newSupplyCategoryIds: []
     };
 
+    var teamMessage = {
+      addressedUserId: null,
+      addressedCompanyId: null,
+      newTeamIds: []
+    };
     // prepare companies, categories and teams
     before(function (done) {
       var localMetalCompanyTemplate = _.clone(metalCompanyTemplate);
@@ -118,7 +123,7 @@ describe('Test setSupplyCategory and setTeam', function () {
       async.series(
         [
           function (cb) {
-            Company.createNew(localMetalCompanyTemplate, function (err, saved) {
+            Company.create(localMetalCompanyTemplate, function (err, saved) {
               if (err) return cb(err);
               metalCompany = saved;
               localIronCategoryTemplate._company = metalCompany._id;
@@ -128,7 +133,7 @@ describe('Test setSupplyCategory and setTeam', function () {
             })
           },
           function (cb) {
-            Company.createNew(localDrinkCompanyTemplate, function (err, saved) {
+            Company.create(localDrinkCompanyTemplate, function (err, saved) {
               if (err) return cb(err);
               drinkCompany = saved;
               localColaCategoryTemplate._company = drinkCompany._id;
@@ -173,7 +178,7 @@ describe('Test setSupplyCategory and setTeam', function () {
 
     // reset message, in order to let each test prepare it as needed
     beforeEach(function () {
-      message = {
+      catMessage = {
         addressedUserId: null,
         addressedCompanyId: null,
         newSupplyCategoryIds: []
@@ -243,16 +248,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with empty array', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -271,16 +276,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with non-empty array', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -299,13 +304,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a company for which user is not admin and addressed user is not enabled for', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + colaCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + colaCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -377,16 +382,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with empty array', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -405,16 +410,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with non-empty array', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -433,13 +438,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a company for which user is not admin and addressed user is not enabled for', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + colaCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + colaCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -511,16 +516,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with empty array', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -539,16 +544,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with non-empty array', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -567,13 +572,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a company for which user is not admin and addressed user is not enabled for', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + colaCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + colaCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -646,16 +651,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with empty array', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -674,16 +679,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with non-empty array', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -702,13 +707,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a company for which user is not admin and addressed user is not enabled for', function (done) {
-        message.addressedUserId = '' + user._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + colaCategory._id);
+        catMessage.addressedUserId = '' + user._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + colaCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -792,16 +797,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -819,17 +824,45 @@ describe('Test setSupplyCategory and setTeam', function () {
           });
       });
 
+      //it('should add user\'s team (only once!) starting with empty array', function (done) {
+      //  teamMessage.addressedUserId = '' + targetUser._id;
+      //  teamMessage.addressedCompanyId = '' + metalCompany._id;
+      //  teamMessage.newTeamIds.push('' + steelTeam._id);
+      //  teamMessage.newTeamIds.push('' + steelTeam._id);
+      //  teamMessage.newTeamIds.push('' + steelTeam._id);
+      //  teamMessage.newTeamIds.push('' + steelTeam._id);
+      //  request(app)
+      //    .post('/api/users/setTeams')
+      //    .set('authorization', 'Bearer ' + tokenCookieString)
+      //    .send(teamMessage)
+      //    .expect(200)
+      //    .expect('Content-Type', /json/)
+      //    .end(function (err, res) {
+      //      if (err) return done(err);
+      //      User.findById(targetUser._id, function (err, foundUser) {
+      //        if (err) return done(err);
+      //        expect(foundUser.teams).to.be.instanceOf(Array);
+      //        expect(foundUser.teams).to.have.length(1);
+      //        expect(foundUser.teams[0]).to.have.hasOwnProperty('_company');
+      //        expect(foundUser.teams[0]).to.have.hasOwnProperty('_category');
+      //        expect(foundUser.teams[0]._company.toString()).to.be.equal(metalCompany._id.toString());
+      //        expect(foundUser.teams[0]._category.toString()).to.be.equal(ironCategory._id.toString());
+      //        return done();
+      //      });
+      //    });
+      //});
+
       it('should add user\'s category (only once!) starting with non-empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -848,13 +881,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a company for which user is not admin', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + drinkCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + drinkCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           //.expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -873,13 +906,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a target user not enabled for category\'s company', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + colaCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + colaCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           //.expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -966,16 +999,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -994,16 +1027,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with non-empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1022,13 +1055,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a company for which user is not admin', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + drinkCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + drinkCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           //.expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1047,13 +1080,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a target user not enabled for category\'s company', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + colaCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + colaCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           //.expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1139,16 +1172,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1167,16 +1200,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with non-empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1195,13 +1228,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a company for which user is not admin', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + drinkCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + drinkCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           //.expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1220,13 +1253,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a target user not enabled for category\'s company', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + colaCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + colaCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           //.expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1313,16 +1346,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1341,16 +1374,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should add user\'s category (only once!) starting with non-empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(200)
           .expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1369,13 +1402,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a company for which user is not admin', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + drinkCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + drinkCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           //.expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1394,13 +1427,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a target user not enabled for category\'s company', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + colaCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + colaCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           //.expect('Content-Type', /json/)
           .end(function (err, res) {
@@ -1485,16 +1518,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category (only once!) starting with empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           .end(function (err, res) {
             if (err) return done(err);
@@ -1503,16 +1536,16 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category (only once!) starting with non-empty array', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           .end(function (err, res) {
             if (err) return done(err);
@@ -1521,13 +1554,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a company for which user is not admin', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + drinkCompany._id;
-        message.newSupplyCategoryIds.push('' + ironCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + drinkCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + ironCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           .end(function (err, res) {
             if (err) return done(err);
@@ -1536,13 +1569,13 @@ describe('Test setSupplyCategory and setTeam', function () {
       });
 
       it('should not add user\'s category for a target user not enabled for category\'s company', function (done) {
-        message.addressedUserId = '' + targetUser._id;
-        message.addressedCompanyId = '' + metalCompany._id;
-        message.newSupplyCategoryIds.push('' + colaCategory._id);
+        catMessage.addressedUserId = '' + targetUser._id;
+        catMessage.addressedCompanyId = '' + metalCompany._id;
+        catMessage.newSupplyCategoryIds.push('' + colaCategory._id);
         request(app)
           .post('/api/users/setSupplyCategories')
           .set('authorization', 'Bearer ' + tokenCookieString)
-          .send(message)
+          .send(catMessage)
           .expect(422)
           .end(function (err, res) {
             if (err) return done(err);

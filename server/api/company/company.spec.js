@@ -76,7 +76,7 @@ describe('Company - Test method: create', function () {
 
 });
 
-describe('Company - Test method: list', function () {
+describe('Company - Test method: list and find', function () {
 
   var companyList = [];
   var listSize = 10;
@@ -91,6 +91,7 @@ describe('Company - Test method: list', function () {
       companyList.push(_.clone(company));
     }
     companyList[0].active = false; // set one company as non-active
+    companyList[1].name = "flowers company";
     utils.mongooseCreate(Company, companyList, done)
   });
 
@@ -118,6 +119,7 @@ describe('Company - Test method: list', function () {
     // set the test route for this controller method
     before(function () {
       app.use('/test/company', express.Router().get('/', companyController.index));
+      app.use('/test/company', express.Router().get('/find', companyController.find));
     });
 
     it('should list all companies', function (done) {
@@ -158,6 +160,34 @@ describe('Company - Test method: list', function () {
           if (err) return done(err);
           expect(res.body).to.be.instanceof(Array);
           expect(res.body.length).to.be.equal(1);
+          return done();
+        });
+    });
+
+    it('should find all test active companies', function (done) {
+      request(app)
+        .get('/test/company/find?value=test')
+        .send()
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceof(Array);
+          expect(res.body.length).to.be.equal(listSize - 2);
+          return done();
+        });
+    });
+
+    it('should find all active companies (query parameter = \'\')', function (done) {
+      request(app)
+        .get('/test/company/find?value=')
+        .send()
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceof(Array);
+          expect(res.body.length).to.be.equal(listSize - 1);
           return done();
         });
     });

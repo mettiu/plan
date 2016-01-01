@@ -34,9 +34,14 @@ exports.index = function (req, res) {
   });
 };
 
-// Get list of companys
+/**
+ * List active companies, filtering by company name. Company name is got from query 'value' parameter.
+ * Every comapny whose name starts with 'value' id found.
+ * @param req
+ * @param res
+ */
 exports.find = function (req, res) {
-  Company.find({'name': new RegExp('^' + req.query.value, 'i')}, '_id name', function (err, companies) {
+  Company.find({'name': new RegExp('^' + req.query.value, 'i'), active: true}, '_id name', function (err, companies) {
     if (err) {
       return handleError(res, err);
     }

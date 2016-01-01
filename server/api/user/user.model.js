@@ -29,7 +29,7 @@ var TeamSchema = new Schema({
   },
   _team: {
     type: Schema.Types.ObjectId,
-    ref: 'Category',
+    ref: 'Team',
     required: true
   }
 });
@@ -140,11 +140,11 @@ UserSchema
 // checks if category/team exists for that company
 UserSchema
   .path('teams')
-  .validate(function (supplyTeamsArray, respond) {
-    validateCategoriesOrTeams(supplyTeamsArray, respond, ['_company', '_team'], this, Team);
+  .validate(function (teamsArray, respond) {
+    validateCategoriesOrTeams(teamsArray, respond, ['_company', '_team'], this, Team);
   }, 'The specified teams are not valid.');
 
-// fieldArray shuld contain the name of the fields of supplyCategory or Team.
+// fieldArray should contain the name of the fields of supplyCategory or Team.
 // the order matters! first is company id field, second is team/category id field!!
 function validateCategoriesOrTeams (validationArray, respond, fieldArray, selfDocument, obj) {
 
@@ -288,8 +288,9 @@ function checkAcl(acl) {
 /**
  * Takes an array of objects and removes from it all the duplicates entries. The objects in the array
  * must have one only level of fields. So this function works only with arrays of objects, where these
- * objects only contain basic types (i.e: strings, numbers, etc.). All the objects in the array must have
- * the same structure and the fields must be listed in fieldArray parameter.
+ * objects only contain basic types (i.e: strings, numbers, etc.) which return always the same string
+ * when casted to string. All the objects in the array must have the same structure and the fields must
+ * be listed in fieldArray parameter.
  *
  * @param arr The array containinng duplicated that should be removed
  * @param fieldArray List of the array objects field names

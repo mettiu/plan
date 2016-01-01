@@ -169,11 +169,11 @@ describe('User Model', function () {
         var localSteelTeamTemplate = _.clone(steelTeamTemplate);
         var localLiquidTeamTemplate = _.clone(liquidTeamTemplate);
 
-        Company.createNew(metalCompanyTemplate, function (err, savedMetalCompany) {
+        Company.create(metalCompanyTemplate, function (err, savedMetalCompany) {
           if (err) return done(err);
           metalCompany = savedMetalCompany;
 
-          Company.createNew(drinkCompanyTemplate, function (err, savedDrinkCompany) {
+          Company.create(drinkCompanyTemplate, function (err, savedDrinkCompany) {
             if (err) return done(err);
             drinkCompany = savedDrinkCompany;
 

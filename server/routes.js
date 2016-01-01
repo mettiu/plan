@@ -4,6 +4,7 @@
 
 'use strict';
 
+var config = require('./config/environment');
 var errors = require('./components/errors');
 var path = require('path');
 
@@ -23,8 +24,13 @@ module.exports = function(app) {
   app.route('/:url(api|auth|components|app|bower_components|assets)/*')
    .get(errors[404]);
 
+  var otherRoutesRegexp = '/*';
+  if (config.env === 'test' || config.env === 'development') {
+    otherRoutesRegexp = '/^(?! ' + 'test' + ' $).*';
+  }
+
   // All other routes should redirect to the index.html
-  app.route('/*')
+  app.route(otherRoutesRegexp)
     .get(function(req, res) {
       res.sendFile(path.resolve(app.get('appPath') + '/index.html'));
     });

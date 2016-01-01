@@ -28,4 +28,12 @@ router.post('/setSupplyCategories',
   controller.setSupplyCategory // finally, remove all company/category pair (only for that company!!) from user and insert new pairs
 );
 
+router.post('/setTeams',
+  auth.isAuthenticated(), //...
+  //auth.syntaxCheck(), // check if json message is compliant to schema given for this transaction
+  auth.isAdminForCompany, // check if user is allowed to admin the addressed company
+  auth.isAddressedUserEnabledForAddressedCompany, // check if addressedUser is enabled for the addressedCompany
+  controller.setTeam // finally, remove all company/category pair (only for that company!!) from user and insert new pairs
+);
+
 module.exports = router;

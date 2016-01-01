@@ -3,6 +3,14 @@
 var _ = require('lodash');
 var Company = require('./company.model');
 
+// Creates a new company in the DB.
+exports.create = function(req, res) {
+  Company.create(req.body, function(err, company) {
+    if(err) { return handleError(res, err); }
+    return res.status(201).json(company);
+  });
+};
+
 // Get list of companys
 exports.index = function(req, res) {
   Company.find(function (err, companys) {
@@ -25,14 +33,6 @@ exports.show = function(req, res) {
     if(err) { return handleError(res, err); }
     if(!company) { return res.status(404).send('Not Found'); }
     return res.json(company);
-  });
-};
-
-// Creates a new company in the DB.
-exports.create = function(req, res) {
-  Company.create(req.body, function(err, company) {
-    if(err) { return handleError(res, err); }
-    return res.status(201).json(company);
   });
 };
 

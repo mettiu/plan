@@ -9,19 +9,34 @@ var async = require('async');
  * @param modelsToRemove
  * @param callback
  */
-exports.mongooseRemoveAll = function(modelsToRemove, callback) {
+exports.mongooseRemoveAll = function (modelsToRemove, callback) {
   if (!modelsToRemove || !Array.isArray(modelsToRemove)) {
     return callback('first parameter should be an Array of Mongoose models')
   }
   async.each(modelsToRemove,
     function (model, cb) {
-    model.remove(function (err) {
-      if (err) cb(err);
-      cb();
+      model.remove(function (err) {
+        if (err) cb(err);
+        cb();
+      });
+    }, function (err) {
+      if (err) return callback(err);
+      return callback();
     });
-  }, function (err) {
-    if (err) return callback(err);
-    return callback();
-  });
 };
 
+exports.mongooseCreate = function (model, documentsToCreate, callback) {
+  if (!documentsToCreate || !Array.isArray(documentsToCreate)) {
+    return callback('first parameter should be an Array of Mongoose models')
+  }
+  async.each(documentsToCreate,
+    function (document, cb) {
+      model.create(document, function (err) {
+        if (err) return cb(err);
+        cb();
+      });
+    }, function (err) {
+      if (err) return callback(err);
+      return callback();
+    });
+};

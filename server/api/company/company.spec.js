@@ -10,7 +10,6 @@ var Company = require('./company.model');
 var utils = require('../../components/utils')
 var request = require('supertest');
 
-
 describe('Company - Test method: create', function () {
 
   var company;
@@ -21,11 +20,6 @@ describe('Company - Test method: create', function () {
       name: "test company",
       info: "test company info"
     };
-  });
-
-  // remove all companies from DB
-  after(function (done) {
-    utils.mongooseRemoveAll([Company], done);
   });
 
   describe('Model test', function () {
@@ -126,16 +120,44 @@ describe('Company - Test method: list', function () {
       app.use('/test/company', express.Router().get('/', companyController.index));
     });
 
-    it('should list companies', function (done) {
+    it('should list all companies', function (done) {
       request(app)
         .get('/test/company')
-        .send({test: 'test'})
+        .send()
         .expect(200)
         .expect('Content-Type', /json/)
         .end(function (err, res) {
           if (err) return done(err);
           expect(res.body).to.be.instanceof(Array);
           expect(res.body.length).to.be.equal(listSize);
+          return done();
+        });
+    });
+
+    it('should list all active companies', function (done) {
+      request(app)
+        .get('/test/company')
+        .send({active: true})
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceof(Array);
+          expect(res.body.length).to.be.equal(listSize - 1);
+          return done();
+        });
+    });
+
+    it('should list all active companies', function (done) {
+      request(app)
+        .get('/test/company')
+        .send({active: false})
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceof(Array);
+          expect(res.body.length).to.be.equal(1);
           return done();
         });
     });

@@ -153,6 +153,24 @@ exports.setSupplyCategory = function (req, res) {
   });
 };
 
+exports.setTeam = function (req, res) {
+
+  User.findById(req.body.addressedUserId, function (err, user) {
+    if (err || !user) return handleError(res, err);
+
+    _.forEach(req.body.newTeamIds, function (newTeamId) {
+      user.teams.push({
+        _company: mongoose.Types.ObjectId(req.body.addressedCompanyId),
+        _category: mongoose.Types.ObjectId(newTeamId)
+      });
+    });
+    user.save(function(err) {
+      if (err) return handleError(res, err);
+      return res.status(200).json({result: 'OK'});
+    });
+  });
+};
+
 
 /**
  * Authentication callback

@@ -112,9 +112,24 @@ function isAddressedUserEnabledForAddressedCompany(req, res, next) {
   });
 }
 
+/**
+ * Check if User is a platform admin. Useful for filtering requests to methods
+ * reserved for platform administrators.
+ *
+ * TODO: implement this control. At the moment this check always returns true
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
+function isPlatformAdmin (req, res, next) {
+  next();
+}
+
 exports.isAuthenticated = isAuthenticated;
 exports.hasRole = hasRole;
 exports.signToken = signToken;
 exports.setTokenCookie = setTokenCookie;
 exports.isAdminForCompany = isAdminForCompany;
 exports.isAddressedUserEnabledForAddressedCompany = isAddressedUserEnabledForAddressedCompany;
+exports.isPlatformAdmin = isPlatformAdmin;

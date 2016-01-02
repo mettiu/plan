@@ -9,10 +9,10 @@ var Company = require('./company.model');
  * @param req
  * @param res
  */
-exports.create = function (req, res) {
+exports.create = function (req, res, next) {
   Company.create(req.body, function (err, company) {
     if (err) {
-      return handleError(res, err);
+      return next(err);
     }
     return res.status(201).json(company);
   });
@@ -25,12 +25,12 @@ exports.create = function (req, res) {
  * @param req
  * @param res
  */
-exports.index = function (req, res) {
+exports.index = function (req, res, next) {
   var query = {};
   if (req.body.active !== undefined && typeof(req.body.active) === "boolean") query = {active: req.body.active};
   Company.find(query, function (err, companys) {
     if (err) {
-      return handleError(res, err);
+      return next(err);
     }
     return res.status(200).json(companys);
   });
@@ -46,7 +46,7 @@ exports.index = function (req, res) {
 exports.find = function (req, res) {
   Company.find({'name': new RegExp('^' + req.query.value, 'i'), active: true}, '_id name', function (err, companies) {
     if (err) {
-      return handleError(res, err);
+      return next(err);
     }
     return res.status(200).json(companies);
   });

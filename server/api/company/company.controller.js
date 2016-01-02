@@ -4,7 +4,8 @@ var _ = require('lodash');
 var Company = require('./company.model');
 
 /**
- * Creates new companiy in DB.
+ * Creates new company in DB.
+ * In case of success returns http code 201 with the company created.
  * @param req
  * @param res
  */
@@ -20,6 +21,7 @@ exports.create = function (req, res) {
 /**
  * List companies. Accepts optional parameter req.body.active <boolean> to match only active
  * or inactive companies.
+ * In case of success returns http code 200 with the array of companies found.
  * @param req
  * @param res
  */
@@ -36,7 +38,8 @@ exports.index = function (req, res) {
 
 /**
  * List active companies, filtering by company name. Company name is got from query 'value' parameter.
- * Every comapny whose name starts with 'value' id found.
+ * Every company whose name starts with 'value' id found.
+ * In case of success returns http code 200 with the array of companies found.
  * @param req
  * @param res
  */

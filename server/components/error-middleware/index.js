@@ -25,7 +25,6 @@ exports.validationError = function(err, req, res, next) {
  * @param err
  * @param req
  * @param res
- * @param next
  */
 exports.fatalError = function(err, req, res) {
   console.error("Fatal error!", err.stack);

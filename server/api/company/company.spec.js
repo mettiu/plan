@@ -214,12 +214,13 @@ describe('Company controller', function () {
     var company;
 
     // set company test data
-    before(function () {
+    before(function (done) {
       company = _.clone(companyTemplate);
 
       Company.create(company, function (err, inserted) {
         if (err) return done(err);
-        return company = inserted;
+        company = inserted;
+        return done();
       });
 
     });

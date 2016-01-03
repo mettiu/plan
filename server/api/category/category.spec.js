@@ -359,9 +359,9 @@ describe('Category controller', function () {
       utils.mongooseRemoveAll([Category], done);
     });
 
-    // remove all companies, categories and users from DB
+    // remove all categories and users from DB
     after(function (done) {
-      utils.mongooseRemoveAll([Company, Category, User], done);
+      utils.mongooseRemoveAll([Category, User], done);
     });
 
     describe('Model test', function () {

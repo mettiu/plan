@@ -43,6 +43,7 @@ exports.index = function (req, res, next) {
  * In case of success returns http code 200 with the array of companies found.
  * @param req
  * @param res
+ * @param next
  */
 exports.find = function (req, res, next) {
   Company.find({'name': new RegExp('^' + req.query.value, 'i'), active: true}, '_id name', function (err, companies) {

@@ -337,7 +337,7 @@ describe('Category controller', function () {
 
     // set category test data
     beforeEach(function (done) {
-      category = _.clone(companyTemplate);
+      category = _.clone(categoryTemplate);
       category._company = company._id;
       category.purchaseUsers = [userArray[0]._id, userArray[1]._id];
 
@@ -359,9 +359,9 @@ describe('Category controller', function () {
       utils.mongooseRemoveAll([Category], done);
     });
 
-    // remove all companies and users from DB
+    // remove all companies, categories and users from DB
     after(function (done) {
-      utils.mongooseRemoveAll([Company, User], done);
+      utils.mongooseRemoveAll([Company, Category, User], done);
     });
 
     describe('Model test', function () {
@@ -432,7 +432,7 @@ describe('Category controller', function () {
 
     // set category test data
     beforeEach(function (done) {
-      category = _.clone(companyTemplate);
+      category = _.clone(categoryTemplate);
       category._company = company._id;
 
       Category.create(category, function (err, inserted) {

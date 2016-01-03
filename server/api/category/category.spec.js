@@ -19,7 +19,7 @@ function mountMiddleware() {
   app.use('/test/categories', express.Router().get('/', categoryController.index));
   app.use('/test/categories', express.Router().get('/find', categoryController.find));
   app.use('/test/categories', express.Router().get('/:id', categoryController.show));
-  //app.use('/test/categories', express.Router().put('/:id', categoryController.update));
+  app.use('/test/categories', express.Router().put('/:id', categoryController.update));
   //app.use('/test/categories', express.Router().delete('/:id', categoryController.destroy));
   errorMiddleware(app);
 }
@@ -33,6 +33,11 @@ var companyTemplate = {
   name: "test company",
   info: "test company info"
 };
+
+var userTemplateArray = [
+  {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'},
+  {provider: 'local', name: 'Fake User Two', email: 'testtwo@test.com', password: 'passwordtwo'}
+];
 
 describe('Category controller', function () {
 
@@ -311,6 +316,115 @@ describe('Category controller', function () {
 
   });
 
+  describe('Category - Test method: update', function () {
+
+    var category;
+    var userArray;
+
+    // set users test data
+    before(function (done) {
+      userArray = _.clone(userTemplateArray);
+
+      User.create(userArray, function (err, insertedArray) {
+        if (err) return done(err);
+        insertedArray.forEach(function (item, i) {
+          userArray[i] = item;
+        });
+        return done();
+      });
+
+    });
+
+    // set company test data
+    beforeEach(function (done) {
+      category = _.clone(companyTemplate);
+      category._company = company._id;
+      category.purchaseUsers = [userArray[0]._id, userArray[1]._id];
+
+      Category.create(category, function (err, inserted) {
+        if (err) return done(err);
+        category = inserted;
+        return done();
+      });
+    });
+
+    // prepare company test data
+    beforeEach(function (done) {
+      category.purchaseUsers = [userArray[0]._id];
+      return done();
+    });
+
+    // remove all companies from DB
+    afterEach(function (done) {
+      utils.mongooseRemoveAll([Category], done);
+    });
+
+    // remove all companies and users from DB
+    after(function (done) {
+      utils.mongooseRemoveAll([Company, User], done);
+    });
+
+    describe('Model test', function () {
+
+      it('should update the category', function (done) {
+        expect(category.purchaseUsers).to.have.length(1);
+        category.save(function (err, saved) {
+          if (err) return done(err);
+          expect(saved).to.be.an.instanceOf(Category);
+          expect(saved).to.have.property('_id', category._id);
+          expect(saved.purchaseUsers).to.have.length(1);
+          return done();
+        });
+      });
+
+    });
+
+    describe('Controller test', function () {
+
+      it('should update the category', function (done) {
+        expect(category.purchaseUsers).to.have.length(1);
+        request(app)
+          .put('/test/categories/' + category._id)
+          .send(category)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.have.property('_id', category._id.toString());
+            expect(res.body.purchaseUsers).to.have.length(1);
+            return done();
+          });
+      });
+
+      it('should not update the category if a fake id is sent', function (done) {
+        expect(category.purchaseUsers).to.have.length(1);
+        request(app)
+          .put('/test/categories/' + 'fake id')
+          .send(category)
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+      it('should not update the category if a fake id is sent, even id it\'s a valid objectId', function (done) {
+        expect(category.purchaseUsers).to.have.length(1);
+        request(app)
+          .put('/test/categories/' + mongoose.Types.ObjectId())
+          .send(category)
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+    });
+
+  });
 
 
 

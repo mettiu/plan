@@ -1,6 +1,6 @@
 'use strict';
 
-//var _ = require('lodash');
+var _ = require('lodash');
 var Category = require('./category.model');
 var errors = require('../../components/errors');
 
@@ -73,5 +73,41 @@ exports.show = function (req, res, next) {
       return res.status(404).send('Not Found');
     }
     return res.status(200).json(category);
+  });
+};
+
+/**
+ * Update a category by its Id.
+ * CastError is thrown by Mongoose (and sent to next()) if id string does not represent a valid ObjectId.
+ * In case of success returns http code 200 with the updated category. If no category matches with the given Id,
+ * 404 is returned.
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.update = function (req, res, next) {
+  if (req.body._id) {
+    delete req.body._id;
+  }
+  Category.findById(req.params.id, function (err, category) {
+    if (err) {
+      return next(err);
+    }
+    if (!category) {
+      return res.status(404).send('Not Found');
+    }
+
+    // array properties are replaced with new ones
+    var updated = _.merge(category, req.body, function (from, to) {
+      if (_.isArray(from)) {
+        return to;
+      }
+    });
+    updated.save(function (err) {
+      if (err) {
+        return next(err);
+      }
+      return res.status(200).json(updated);
+    });
   });
 };

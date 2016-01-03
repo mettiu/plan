@@ -16,9 +16,9 @@ var errorMiddleware = require('../../components/error-middleware');
 
 function mountMiddleware() {
   app.use('/test/categories', express.Router().post('/create', categoryController.create));
-  //app.use('/test/categories', express.Router().get('/', categoryController.index));
-  //app.use('/test/categories', express.Router().get('/find', categoryController.find));
-  //app.use('/test/categories', express.Router().get('/:id', categoryController.show));
+  app.use('/test/categories', express.Router().get('/', categoryController.index));
+  app.use('/test/categories', express.Router().get('/find', categoryController.find));
+  app.use('/test/categories', express.Router().get('/:id', categoryController.show));
   //app.use('/test/categories', express.Router().put('/:id', categoryController.update));
   //app.use('/test/categories', express.Router().delete('/:id', categoryController.destroy));
   errorMiddleware(app);
@@ -113,7 +113,203 @@ describe('Category controller', function () {
 
   });
 
+  describe('Category - Test method: list and find', function () {
 
+    var categoryList = [];
+    var listSize = 10;
+
+    // set test data
+    before(function (done) {
+      var category = _.clone(categoryTemplate);
+      category._company = company._id;
+      for (var i = 0; i < listSize; i++) {
+        categoryList.push(_.clone(category));
+      }
+      categoryList[0].active = false; // set one category as non-active
+      categoryList[1].name = "flowers category";
+      utils.mongooseCreate(Category, categoryList, done)
+    });
+
+    // remove all companies from DB
+    after(function (done) {
+      utils.mongooseRemoveAll([Category], done);
+    });
+
+    describe('Model test', function () {
+
+      it('should list categories', function (done) {
+        Category.find({active: true}, function (err, list) {
+          if (err) return done(err);
+          expect(list).to.be.instanceof(Array);
+          expect(list.length).to.be.equal(listSize - 1);
+          return done();
+        })
+
+      });
+
+    });
+
+    describe('Controller test', function () {
+
+      it('should list all categories', function (done) {
+        request(app)
+          .get('/test/categories')
+          .send()
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.be.instanceof(Array);
+            expect(res.body.length).to.be.equal(listSize);
+            return done();
+          });
+      });
+
+      it('should list all active categories', function (done) {
+        request(app)
+          .get('/test/categories')
+          .send({active: true})
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.be.instanceof(Array);
+            expect(res.body.length).to.be.equal(listSize - 1);
+            return done();
+          });
+      });
+
+      it('should list all active categories', function (done) {
+        request(app)
+          .get('/test/categories')
+          .send({active: false})
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.be.instanceof(Array);
+            expect(res.body.length).to.be.equal(1);
+            return done();
+          });
+      });
+
+      it('should find all test active categories', function (done) {
+        request(app)
+          .get('/test/categories/find?value=test')
+          .send()
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.be.instanceof(Array);
+            expect(res.body.length).to.be.equal(listSize - 2);
+            return done();
+          });
+      });
+
+      it('should find all active categories (query parameter = \'\')', function (done) {
+        request(app)
+          .get('/test/categories/find?value=')
+          .send()
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.be.instanceof(Array);
+            expect(res.body.length).to.be.equal(listSize - 1);
+            return done();
+          });
+      });
+
+    });
+
+  });
+
+  describe('Category - Test method: show', function () {
+
+    var category;
+
+    // set company test data
+    before(function (done) {
+      category = _.clone(categoryTemplate);
+      category._company = company._id;
+
+      Category.create(category, function (err, inserted) {
+        if (err) return done(err);
+        category = inserted;
+        return done();
+      });
+
+    });
+
+    // remove all companies from DB
+    after(function (done) {
+      utils.mongooseRemoveAll([Category], done);
+    });
+
+    describe('Model test', function () {
+
+      it('should find the category', function (done) {
+        Category.findById(category._id, function (err, found) {
+          if (err) return done(err);
+          expect(found).to.be.an.instanceOf(Category);
+          return done();
+        });
+      });
+
+      it('should not find the category', function (done) {
+        Category.findById(mongoose.Types.ObjectId(), function (err, found) {
+          if (err) return done(err);
+          expect(found).to.be.null;
+          return done();
+        });
+      });
+
+    });
+
+    describe('Controller test', function () {
+
+      it('should find the category', function (done) {
+        request(app)
+          .get('/test/categories/' + category._id)
+          .send()
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.be.instanceof(Object);
+            expect(res.body._id.toString()).to.be.equal(category._id.toString());
+            return done();
+          });
+      });
+
+      it('should not find the category by a fake id', function (done) {
+        request(app)
+          .get('/test/categories/your id here')
+          .send()
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+      it('should not find the category by a fake id, even if well formatted', function (done) {
+        request(app)
+          .get('/test/categories/' + mongoose.Types.ObjectId())
+          .send()
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+    });
+
+  });
 
 
 

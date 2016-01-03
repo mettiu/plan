@@ -96,7 +96,7 @@ exports.update = function (req, res, next) {
       return res.status(404).send('Not Found');
     }
 
-    // array proprerties are replaced with new ones
+    // array properties are replaced with new ones
     var updated = _.merge(company, req.body, function (from, to) {
       if (_.isArray(from)) {
         return to;

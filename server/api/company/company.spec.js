@@ -12,10 +12,11 @@ var utils = require('../../components/utils');
 var errorMiddleware = require('../../components/error-middleware');
 
 function mountMiddleware () {
-  app.use('/test/company', express.Router().get('/', companyController.index));
-  app.use('/test/company', express.Router().get('/find', companyController.find));
-  app.use('/test/company', express.Router().post('/create', companyController.create));
-  app.use(errorMiddleware.validationError, errorMiddleware.fatalError);
+  app.use('/test/companies', express.Router().get('/', companyController.index));
+  app.use('/test/companies', express.Router().get('/find', companyController.find));
+  app.use('/test/companies', express.Router().post('/create', companyController.create));
+  app.use('/test/companies', express.Router().get('/:id', companyController.show));
+  errorMiddleware(app);
 }
 
 var companyTemplate = {
@@ -71,7 +72,7 @@ describe('Company controller', function () {
 
       it('should create company', function (done) {
         request(app)
-          .post('/test/company/create')
+          .post('/test/companies/create')
           .send(company)
           .expect(201)
           .expect('Content-Type', /json/)
@@ -96,12 +97,8 @@ describe('Company controller', function () {
 
     // set test data
     before(function (done) {
-      var company = {
-        name: "test company",
-        info: "test company info"
-      };
       for (var i = 0; i < listSize; i++) {
-        companyList.push(_.clone(company));
+        companyList.push(_.clone(companyTemplate));
       }
       companyList[0].active = false; // set one company as non-active
       companyList[1].name = "flowers company";
@@ -131,7 +128,7 @@ describe('Company controller', function () {
 
       it('should list all companies', function (done) {
         request(app)
-          .get('/test/company')
+          .get('/test/companies')
           .send()
           .expect(200)
           .expect('Content-Type', /json/)
@@ -145,7 +142,7 @@ describe('Company controller', function () {
 
       it('should list all active companies', function (done) {
         request(app)
-          .get('/test/company')
+          .get('/test/companies')
           .send({active: true})
           .expect(200)
           .expect('Content-Type', /json/)
@@ -159,7 +156,7 @@ describe('Company controller', function () {
 
       it('should list all active companies', function (done) {
         request(app)
-          .get('/test/company')
+          .get('/test/companies')
           .send({active: false})
           .expect(200)
           .expect('Content-Type', /json/)
@@ -173,7 +170,7 @@ describe('Company controller', function () {
 
       it('should find all test active companies', function (done) {
         request(app)
-          .get('/test/company/find?value=test')
+          .get('/test/companies/find?value=test')
           .send()
           .expect(200)
           .expect('Content-Type', /json/)
@@ -187,7 +184,7 @@ describe('Company controller', function () {
 
       it('should find all active companies (query parameter = \'\')', function (done) {
         request(app)
-          .get('/test/company/find?value=')
+          .get('/test/companies/find?value=')
           .send()
           .expect(200)
           .expect('Content-Type', /json/)
@@ -195,6 +192,70 @@ describe('Company controller', function () {
             if (err) return done(err);
             expect(res.body).to.be.instanceof(Array);
             expect(res.body.length).to.be.equal(listSize - 1);
+            return done();
+          });
+      });
+
+    });
+
+  });
+
+  describe('Company - Test method: show', function() {
+
+    var company;
+
+    // set company test data
+    before(function () {
+      company = _.clone(companyTemplate);
+
+      Company.create(company, function(err, inserted) {
+        if (err) return done(err);
+        return company = inserted;
+      });
+
+    });
+
+    // remove all companies from DB
+    after(function (done) {
+      utils.mongooseRemoveAll([Company], done);
+    });
+
+    describe('Model test', function() {
+
+      it('should find the company', function(done) {
+        Company.findById(company._id, function(err, found) {
+          if (err) return done(err);
+          expect(found).to.be.an.instanceOf(Company);
+          return done();
+        });
+      });
+
+    });
+
+    describe('Controller test', function() {
+
+      it('should find the company', function (done) {
+        request(app)
+          .get('/test/companies/' + company._id)
+          .send()
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.be.instanceof(Object);
+            expect(res.body._id.toString()).to.be.equal(company._id.toString());
+            return done();
+          });
+      });
+
+      it('should not find the company by a fake id', function (done) {
+        request(app)
+          .get('/test/companies/your id here')
+          .send()
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
             return done();
           });
       });

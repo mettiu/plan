@@ -5,17 +5,20 @@ var chai = require('chai');
 var expect = chai.expect;
 var _ = require('lodash');
 var request = require('supertest');
+var mongoose = require('mongoose');
 var app = require('../../app');
 var companyController = require('./company.controller.js');
 var Company = require('./company.model');
+var User = require('../user/user.model');
 var utils = require('../../components/utils');
 var errorMiddleware = require('../../components/error-middleware');
 
-function mountMiddleware () {
+function mountMiddleware() {
   app.use('/test/companies', express.Router().get('/', companyController.index));
   app.use('/test/companies', express.Router().get('/find', companyController.find));
   app.use('/test/companies', express.Router().post('/create', companyController.create));
   app.use('/test/companies', express.Router().get('/:id', companyController.show));
+  app.use('/test/companies', express.Router().put('/:id', companyController.update));
   errorMiddleware(app);
 }
 
@@ -23,6 +26,11 @@ var companyTemplate = {
   name: "test company",
   info: "test company info"
 };
+
+var userTemplateArray = [
+  {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'},
+  {provider: 'local', name: 'Fake User Two', email: 'testtwo@test.com', password: 'passwordtwo'}
+];
 
 describe('Company controller', function () {
 
@@ -200,7 +208,7 @@ describe('Company controller', function () {
 
   });
 
-  describe('Company - Test method: show', function() {
+  describe('Company - Test method: show', function () {
 
     var company;
 
@@ -208,7 +216,7 @@ describe('Company controller', function () {
     before(function () {
       company = _.clone(companyTemplate);
 
-      Company.create(company, function(err, inserted) {
+      Company.create(company, function (err, inserted) {
         if (err) return done(err);
         return company = inserted;
       });
@@ -220,19 +228,27 @@ describe('Company controller', function () {
       utils.mongooseRemoveAll([Company], done);
     });
 
-    describe('Model test', function() {
+    describe('Model test', function () {
 
-      it('should find the company', function(done) {
-        Company.findById(company._id, function(err, found) {
+      it('should find the company', function (done) {
+        Company.findById(company._id, function (err, found) {
           if (err) return done(err);
           expect(found).to.be.an.instanceOf(Company);
           return done();
         });
       });
 
+      it('should not find the company', function (done) {
+        Company.findById(mongoose.Types.ObjectId(), function (err, found) {
+          if (err) return done(err);
+          expect(found).to.be.null;
+          return done();
+        });
+      });
+
     });
 
-    describe('Controller test', function() {
+    describe('Controller test', function () {
 
       it('should find the company', function (done) {
         request(app)
@@ -252,6 +268,143 @@ describe('Company controller', function () {
         request(app)
           .get('/test/companies/your id here')
           .send()
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+      it('should not find the company by a fake id, even if well formatted', function (done) {
+        request(app)
+          .get('/test/companies/' + mongoose.Types.ObjectId())
+          .send()
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+    });
+
+  });
+
+  describe('Company - Test method: update', function () {
+
+    var company;
+    var userArray;
+
+    // set users test data
+    before(function (done) {
+      userArray = _.clone(userTemplateArray);
+
+      User.create(userArray, function (err, insertedArray) {
+        if (err) return done(err);
+        insertedArray.forEach(function(item, i) {
+          userArray[i] = item;
+        });
+        return done();
+      });
+
+    });
+
+    // set company test data
+    beforeEach(function (done) {
+      company = _.clone(companyTemplate);
+      company.adminUsers = [ userArray[0]._id ];
+      company.purchaseUsers = [ userArray[0]._id, userArray[1]._id ];
+      company.teamUsers = [ userArray[0]._id ];
+
+      Company.create(company, function (err, inserted) {
+        if (err) return done(err);
+        company = inserted;
+        return done();
+      });
+    });
+
+    // prepare company test data
+    beforeEach(function (done) {
+      company.adminUsers = [ userArray[0]._id, userArray[1]._id ];
+      company.purchaseUsers = [ userArray[0]._id ];
+      company.teamUsers = [ userArray[0]._id, userArray[1]._id];
+      return done();
+    });
+
+    // remove all companies from DB
+    afterEach(function (done) {
+      utils.mongooseRemoveAll([Company], done);
+    });
+
+    // remove all companies and users from DB
+    after(function (done) {
+      utils.mongooseRemoveAll([Company, User], done);
+    });
+
+    describe('Model test', function () {
+
+      it('should update the company', function (done) {
+        expect(company.adminUsers).to.have.length(2);
+        expect(company.purchaseUsers).to.have.length(1);
+        expect(company.teamUsers).to.have.length(2);
+        company.save(function(err, saved) {
+          if(err) return done(err);
+          expect(saved).to.be.an.instanceOf(Company);
+          expect(saved).to.have.property('_id', company._id);
+          expect(saved.adminUsers).to.have.length(2);
+          expect(saved.purchaseUsers).to.have.length(1);
+          expect(saved.teamUsers).to.have.length(2);
+          return done();
+        });
+      });
+
+    });
+
+    describe('Controller test', function () {
+
+      it('should update the company', function (done) {
+        expect(company.adminUsers).to.have.length(2);
+        expect(company.purchaseUsers).to.have.length(1);
+        expect(company.teamUsers).to.have.length(2);
+        request(app)
+          .put('/test/companies/' + company._id)
+          .send(company)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.have.property('_id', company._id.toString());
+            expect(res.body.adminUsers).to.have.length(2);
+            expect(res.body.purchaseUsers).to.have.length(1);
+            expect(res.body.teamUsers).to.have.length(2);
+            return done();
+          });
+      });
+
+      it('should not update the company if a fake id is sent', function (done) {
+        expect(company.adminUsers).to.have.length(2);
+        expect(company.purchaseUsers).to.have.length(1);
+        expect(company.teamUsers).to.have.length(2);
+        request(app)
+          .put('/test/companies/' + 'fake id')
+          .send(company)
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+      it('should not update the company if a fake id is sent, even id it\'s a valid objectId', function (done) {
+        expect(company.adminUsers).to.have.length(2);
+        expect(company.purchaseUsers).to.have.length(1);
+        expect(company.teamUsers).to.have.length(2);
+        request(app)
+          .put('/test/companies/' + mongoose.Types.ObjectId())
+          .send(company)
           .expect(404)
           //.expect('Content-Type', /json/)
           .end(function (err, res) {

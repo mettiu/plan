@@ -56,7 +56,7 @@ exports.find = function (req, res) {
 // Get a single company
 /**
  * Get details for one company, finding by Id.
- * CastError is thrown by Mongoose if id string does not represent a valid ObjectId.
+ * CastError is thrown by Mongoose (and sent to next()) if id string does not represent a valid ObjectId.
  * @param req
  * @param res
  * @param next
@@ -73,24 +73,36 @@ exports.show = function (req, res, next) {
   });
 };
 
-// Updates an existing company in the DB.
-exports.update = function (req, res) {
+/**
+ * Update a company by its Id.
+ * CastError is thrown by Mongoose (and sent to next()) if id string does not represent a valid ObjectId.
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.update = function (req, res, next) {
   if (req.body._id) {
     delete req.body._id;
   }
   Company.findById(req.params.id, function (err, company) {
     if (err) {
-      return handleError(res, err);
+      return next(err);
     }
     if (!company) {
       return res.status(404).send('Not Found');
     }
-    var updated = _.merge(company, req.body);
+
+    // array proprerties are replaced with new ones
+    var updated = _.merge(company, req.body, function (from, to) {
+      if (_.isArray(from)) {
+        return to;
+      }
+    });
     updated.save(function (err) {
       if (err) {
-        return handleError(res, err);
+        return next(err);
       }
-      return res.status(200).json(company);
+      return res.status(200).json(updated);
     });
   });
 };

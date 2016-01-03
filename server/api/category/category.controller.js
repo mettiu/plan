@@ -9,6 +9,7 @@ var errors = require('../../components/errors');
  * In case of success returns http code 201 with the category created.
  * @param req
  * @param res
+ * @param next
  */
 exports.create = function (req, res, next) {
   Category.create(req.body, function (err, category) {

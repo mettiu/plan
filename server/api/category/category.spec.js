@@ -20,7 +20,7 @@ function mountMiddleware() {
   app.use('/test/categories', express.Router().get('/find', categoryController.find));
   app.use('/test/categories', express.Router().get('/:id', categoryController.show));
   app.use('/test/categories', express.Router().put('/:id', categoryController.update));
-  //app.use('/test/categories', express.Router().delete('/:id', categoryController.destroy));
+  app.use('/test/categories', express.Router().delete('/:id', categoryController.destroy));
   errorMiddleware(app);
 }
 
@@ -65,7 +65,7 @@ describe('Category controller', function () {
 
     var category;
 
-    // set company variable with test data
+    // set category variable with test data
     before(function () {
       category = _.clone(categoryTemplate);
       category._company = company._id;
@@ -135,7 +135,7 @@ describe('Category controller', function () {
       utils.mongooseCreate(Category, categoryList, done)
     });
 
-    // remove all companies from DB
+    // remove all categories from DB
     after(function (done) {
       utils.mongooseRemoveAll([Category], done);
     });
@@ -234,7 +234,7 @@ describe('Category controller', function () {
 
     var category;
 
-    // set company test data
+    // set category test data
     before(function (done) {
       category = _.clone(categoryTemplate);
       category._company = company._id;
@@ -247,7 +247,7 @@ describe('Category controller', function () {
 
     });
 
-    // remove all companies from DB
+    // remove all categories from DB
     after(function (done) {
       utils.mongooseRemoveAll([Category], done);
     });
@@ -335,7 +335,7 @@ describe('Category controller', function () {
 
     });
 
-    // set company test data
+    // set category test data
     beforeEach(function (done) {
       category = _.clone(companyTemplate);
       category._company = company._id;
@@ -348,7 +348,7 @@ describe('Category controller', function () {
       });
     });
 
-    // prepare company test data
+    // prepare category test data
     beforeEach(function (done) {
       category.purchaseUsers = [userArray[0]._id];
       return done();
@@ -419,6 +419,93 @@ describe('Category controller', function () {
           .end(function (err, res) {
             if (err) return done(err);
             return done();
+          });
+      });
+
+    });
+
+  });
+
+  describe('Category - Test method: destroy', function () {
+
+    var category;
+
+    // set category test data
+    beforeEach(function (done) {
+      category = _.clone(companyTemplate);
+      category._company = company._id;
+
+      Category.create(category, function (err, inserted) {
+        if (err) return done(err);
+        category = inserted;
+        return done();
+      });
+
+    });
+
+    // remove all companies from DB
+    afterEach(function (done) {
+      utils.mongooseRemoveAll([Category], done);
+    });
+
+    describe('Model test', function () {
+
+      it('should delete the category', function (done) {
+        category.remove(function (err) {
+          if (err) return done(err);
+          return done();
+        });
+      });
+
+    });
+
+    describe('Controller test', function () {
+
+      it('should delete the category', function (done) {
+        request(app)
+          .delete('/test/categories/' + category._id)
+          .send()
+          .expect(204)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            Category.count({'_id': category._id}, function (err, c) {
+              if (err) return done(err);
+              expect(c).to.be.equal(0);
+              return done();
+            });
+          });
+      });
+
+      it('should not delete the category with a fake id', function (done) {
+        request(app)
+          .delete('/test/categories/' + 'fake id')
+          .send()
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            Category.count({'_id': category._id}, function (err, c) {
+              if (err) return done(err);
+              expect(c).to.be.equal(1);
+              return done();
+            });
+          });
+      });
+
+      it('should not delete the category with a fake id, even if well formatted', function (done) {
+        request(app)
+          .delete('/test/categories/' + mongoose.Types.ObjectId())
+          .send()
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            Category.count({'_id': category._id}, function (err, c) {
+              if (err) return done(err);
+              expect(c).to.be.equal(1);
+              return done();
+            });
           });
       });
 

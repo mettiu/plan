@@ -111,3 +111,28 @@ exports.update = function (req, res, next) {
     });
   });
 };
+
+/**
+ * Deletes from DB a Category, finding it by its Id.
+ * CastError is thrown by Mongoose (and sent to next()) if id string does not represent a valid ObjectId.
+ * In case of success returns http code 204. If no category matches with the given Id, 404 is returned.
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.destroy = function (req, res, next) {
+  Category.findById(req.params.id, function (err, category) {
+    if (err) {
+      return next(err);
+    }
+    if (!category) {
+      return res.status(404).send('Not Found');
+    }
+    category.remove(function (err) {
+      if (err) {
+        return next(err);
+      }
+      return res.status(204).send('No Content');
+    });
+  });
+};

@@ -22,6 +22,10 @@ var CategorySchema = new Schema({
     ref: 'Company',
     required: true
   },
+  active: {
+    type: Boolean,
+    default: true
+  },
   purchaseUsers: [{
     type: Schema.Types.ObjectId,
     ref: 'User',

@@ -513,6 +513,4 @@ describe('Category controller', function () {
 
   });
 
-
-
 });

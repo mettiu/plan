@@ -26,7 +26,7 @@ var CategorySchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  }],
+  }]
 });
 
 CategorySchema.plugin(timestamps, {

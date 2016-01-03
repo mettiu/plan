@@ -5,42 +5,36 @@ var mongoose = require('mongoose'),
 var timestamps = require('mongoose-timestamp');
 
 var TeamSchema = new Schema({
-
-
   name: {
     type: String,
-    minlength:  [5, 'The value of path `{PATH}` (`{VALUE}`) is shorter than the minimum allowed length ({MINLENGTH}).'],
-    maxlength: [50, 'The value of path `{PATH}` (`{VALUE}`) is longer than the maximum allowed length ({MAXLENGTH}).'],
-    required: '{PATH} is required!'
+    minlength: 5,
+    maxlength: 100,
+    required: true
   },
   description: {
     type: String,
-    maxlength: 5000
+    minlength: 0,
+    maxlength: 100
   },
   _company: {
     type: Schema.Types.ObjectId,
     ref: 'Company',
-    required: 'is required!'
-  }
+    required: true
+  },
+  active: {
+    type: Boolean,
+    default: true
+  },
+  teamUsers: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }]
 });
 
 TeamSchema.plugin(timestamps, {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 });
-
-
-/**
- * Statics
- */
-TeamSchema
-  .statics = {
-
-  createNew: function (model, callback) {
-    (new this(model)).save(callback);
-  }
-
-};
-
 
 module.exports = mongoose.model('Team', TeamSchema);

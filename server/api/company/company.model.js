@@ -1,7 +1,7 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
+  Schema = mongoose.Schema;
 
 var CompanySchema = new Schema({
   name: {
@@ -20,10 +20,10 @@ var CompanySchema = new Schema({
     default: true
   },
   purchaseUsers: [{
-  type: Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
-}],
+  }],
   teamUsers: [{
     type: Schema.Types.ObjectId,
     ref: 'User',
@@ -35,5 +35,19 @@ var CompanySchema = new Schema({
     required: true
   }]
 });
+
+/**
+ * Define a simple virtual 'profile' for company.
+ */
+CompanySchema
+  .virtual('profile')
+  .get(function () {
+    return {
+      '_id': this._id,
+      'name': this.name,
+      'info': this.info,
+      'active': this.active
+    };
+  });
 
 module.exports = mongoose.model('Company', CompanySchema);

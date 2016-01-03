@@ -6,7 +6,7 @@ var errors = require('../../components/errors');
 
 /**
  * Creates new category in DB.
- * In case of success returns http code 201 with the company created.
+ * In case of success returns http code 201 with the category created.
  * @param req
  * @param res
  */

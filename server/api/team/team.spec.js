@@ -513,6 +513,4 @@ describe('Team controller', function () {
 
   });
 
-
-
 });

@@ -14,9 +14,9 @@ var utils = require('../../components/utils');
 var errorMiddleware = require('../../components/error-middleware');
 
 function mountMiddleware() {
+  app.use('/test/companies', express.Router().post('/create', companyController.create));
   app.use('/test/companies', express.Router().get('/', companyController.index));
   app.use('/test/companies', express.Router().get('/find', companyController.find));
-  app.use('/test/companies', express.Router().post('/create', companyController.create));
   app.use('/test/companies', express.Router().get('/:id', companyController.show));
   app.use('/test/companies', express.Router().put('/:id', companyController.update));
   app.use('/test/companies', express.Router().delete('/:id', companyController.destroy));

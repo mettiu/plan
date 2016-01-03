@@ -53,7 +53,6 @@ exports.find = function (req, res) {
   });
 };
 
-// Get a single company
 /**
  * Get details for one company, finding by Id.
  * CastError is thrown by Mongoose (and sent to next()) if id string does not represent a valid ObjectId.
@@ -107,25 +106,26 @@ exports.update = function (req, res, next) {
   });
 };
 
-// Deletes a company from the DB.
-exports.destroy = function (req, res) {
+/**
+ * Deletes from DB a Company, finding it by its Id.
+ * CastError is thrown by Mongoose (and sent to next()) if id string does not represent a valid ObjectId.
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.destroy = function (req, res, next) {
   Company.findById(req.params.id, function (err, company) {
     if (err) {
-      return handleError(res, err);
+      return next(err);
     }
     if (!company) {
       return res.status(404).send('Not Found');
     }
     company.remove(function (err) {
       if (err) {
-        return handleError(res, err);
+        return next(err);
       }
       return res.status(204).send('No Content');
     });
   });
 };
-
-//TODO: check this function (handleError)
-//function handleError(res, err) {
-//  return res.status(500).send(err);
-//}

@@ -156,14 +156,14 @@ describe('Test setSupplyCategory and setTeam', function () {
             })
           },
           function (cb) {
-            Team.createNew(localSteelTeamTemplate, function (err, saved) {
+            Team.create(localSteelTeamTemplate, function (err, saved) {
               if (err) return cb(err);
               steelTeam = saved;
               return cb(null, steelTeam);
             })
           },
           function (cb) {
-            Team.createNew(localLiquidTeamTemplate, function (err, saved) {
+            Team.create(localLiquidTeamTemplate, function (err, saved) {
               if (err) return cb(err);
               liquidTeam = saved;
               return cb(null, liquidTeam);

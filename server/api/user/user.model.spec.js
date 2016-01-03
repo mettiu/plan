@@ -188,12 +188,12 @@ describe('User Model', function () {
                 colaCategory = savedColaCategory;
 
                 localSteelTeamTemplate._company = metalCompany._id;
-                Team.createNew(localSteelTeamTemplate, function (err, savedSteelTeam) {
+                Team.create(localSteelTeamTemplate, function (err, savedSteelTeam) {
                   if (err) return done(err);
                   steelTeam = savedSteelTeam;
 
                   localLiquidTeamTemplate._company = drinkCompany._id;
-                  Team.createNew(localLiquidTeamTemplate, function (err, savedLiquidTeam) {
+                  Team.create(localLiquidTeamTemplate, function (err, savedLiquidTeam) {
                     if (err) return done(err);
                     liquidTeam = savedLiquidTeam;
 

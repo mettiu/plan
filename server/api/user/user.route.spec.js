@@ -142,14 +142,14 @@ describe('Test setSupplyCategory and setTeam', function () {
             })
           },
           function (cb) {
-            Category.createNew(localIronCategoryTemplate, function (err, saved) {
+            Category.create(localIronCategoryTemplate, function (err, saved) {
               if (err) return cb(err);
               ironCategory = saved;
               return cb(null, ironCategory);
             })
           },
           function (cb) {
-            Category.createNew(localColaCategoryTemplate, function (err, saved) {
+            Category.create(localColaCategoryTemplate, function (err, saved) {
               if (err) return cb(err);
               colaCategory = saved;
               return cb(null, colaCategory);

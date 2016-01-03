@@ -178,12 +178,12 @@ describe('User Model', function () {
             drinkCompany = savedDrinkCompany;
 
             localIronCategoryTemplate._company = metalCompany._id;
-            Category.createNew(localIronCategoryTemplate, function (err, savedIronCategory) {
+            Category.create(localIronCategoryTemplate, function (err, savedIronCategory) {
               if (err) return done(err);
               ironCategory = savedIronCategory;
 
               localColaCategoryTemplate._company = drinkCompany._id;
-              Category.createNew(localColaCategoryTemplate, function (err, savedColaCategory) {
+              Category.create(localColaCategoryTemplate, function (err, savedColaCategory) {
                 if (err) return done(err);
                 colaCategory = savedColaCategory;
 

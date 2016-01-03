@@ -45,23 +45,3 @@ exports.mongooseCreate = function (model, documentsToCreate, callback) {
   //    return callback();
   //  });
 };
-
-
-// CUSTOM ERROR TYPE EXAMPLE
-
-//module.exports = function CustomError(message, extra) {
-//  Error.captureStackTrace(this, this.constructor);
-//  this.name = this.constructor.name;
-//  this.message = message;
-//  this.extra = extra;
-//};
-//
-//require('util').inherits(module.exports, Error);
-//
-// ---------------------
-//
-//var CustomError = require('./errors/custom-error');
-//
-//function doSomethingBad() {
-//  throw new CustomError('It went bad!', 42);
-//}

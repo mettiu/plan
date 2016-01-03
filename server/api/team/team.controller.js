@@ -1,8 +1,9 @@
 'use strict';
 
-var _ = require('lodash');
-var Team = require('./team.model');
-var errors = require('../../components/errors');
+var
+  _ = require('lodash'),
+  Team = require('./team.model'),
+  errors = require('../../components/errors');
 
 
 /**

@@ -1,8 +1,9 @@
 'use strict';
 
-var mongoose = require('mongoose'),
-  Schema = mongoose.Schema;
-var timestamps = require('mongoose-timestamp');
+var
+  mongoose = require('mongoose'),
+  Schema = mongoose.Schema,
+  timestamps = require('mongoose-timestamp');
 
 var TeamSchema = new Schema({
 

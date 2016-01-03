@@ -1,18 +1,19 @@
 'use strict';
 
-var express = require('express');
-var chai = require('chai');
-var expect = chai.expect;
-var _ = require('lodash');
-var request = require('supertest');
-var mongoose = require('mongoose');
-var app = require('../../app');
-var teamController = require('./team.controller.js');
-var Team = require('./team.model');
-var Company = require('../company/company.model');
-var User = require('../user/user.model');
-var utils = require('../../components/utils');
-var errorMiddleware = require('../../components/error-middleware');
+var
+  express = require('express'),
+  chai = require('chai'),
+  expect = chai.expect,
+  _ = require('lodash'),
+  request = require('supertest'),
+  mongoose = require('mongoose'),
+  app = require('../../app'),
+  teamController = require('./team.controller.js'),
+  Team = require('./team.model'),
+  Company = require('../company/company.model'),
+  User = require('../user/user.model'),
+  utils = require('../../components/utils'),
+  errorMiddleware = require('../../components/error-middleware');
 
 function mountMiddleware() {
   app.use('/test/teams', express.Router().post('/create', teamController.create));

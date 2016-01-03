@@ -55,6 +55,8 @@ exports.find = function (req, res) {
 /**
  * Get details for one company, finding by Id.
  * CastError is thrown by Mongoose (and sent to next()) if id string does not represent a valid ObjectId.
+ * In case of success returns http code 200 with found company. If no company matches with the given Id,
+ * 404 is returned.
  * @param req
  * @param res
  * @param next
@@ -74,6 +76,8 @@ exports.show = function (req, res, next) {
 /**
  * Update a company by its Id.
  * CastError is thrown by Mongoose (and sent to next()) if id string does not represent a valid ObjectId.
+ * In case of success returns http code 200 with the updated company. If no company matches with the given Id,
+ * 404 is returned.
  * @param req
  * @param res
  * @param next
@@ -108,6 +112,7 @@ exports.update = function (req, res, next) {
 /**
  * Deletes from DB a Company, finding it by its Id.
  * CastError is thrown by Mongoose (and sent to next()) if id string does not represent a valid ObjectId.
+ * In case of success returns http code 204. If no company matches with the given Id, 404 is returned.
  * @param req
  * @param res
  * @param next

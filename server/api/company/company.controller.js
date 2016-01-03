@@ -44,7 +44,7 @@ exports.index = function (req, res, next) {
  * @param req
  * @param res
  */
-exports.find = function (req, res) {
+exports.find = function (req, res, next) {
   Company.find({'name': new RegExp('^' + req.query.value, 'i'), active: true}, '_id name', function (err, companies) {
     if (err) {
       return next(err);

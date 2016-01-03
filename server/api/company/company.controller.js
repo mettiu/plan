@@ -55,8 +55,7 @@ exports.find = function (req, res) {
 
 // Get a single company
 /**
- * Get details for one company, finding by Id. If 'complete' query parameter is set to true, the entire company
- * information is returned, instead of just the profile.
+ * Get details for one company, finding by Id.
  * CastError is thrown by Mongoose if id string does not represent a valid ObjectId.
  * @param req
  * @param res
@@ -70,7 +69,7 @@ exports.show = function (req, res, next) {
     if (!company) {
       return res.status(404).send('Not Found');
     }
-    return res.status(200).json(company.profile);
+    return res.status(200).json(company);
   });
 };
 

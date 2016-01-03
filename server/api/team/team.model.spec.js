@@ -56,7 +56,7 @@ describe('Test for Team creation', function () {
   });
 
   it('should not create a Category without Company', function(done) {
-    Team.createNew(teamTemplate, function(err) {
+    Team.create(teamTemplate, function(err) {
       expect(err).to.exist;
       if (err) return done();
     });
@@ -64,7 +64,7 @@ describe('Test for Team creation', function () {
 
   it('should create a Category with Company', function(done) {
     teamTemplate._company = company._id;
-    Team.createNew(teamTemplate, function(err, savedItem) {
+    Team.create(teamTemplate, function(err, savedItem) {
       if (err) return done(err);
       expect(savedItem).to.exist;
       return done();

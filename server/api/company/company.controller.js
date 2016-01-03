@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('lodash');
+var mongoose = require('mongoose');
 var Company = require('./company.model');
 
 /**
@@ -53,15 +54,23 @@ exports.find = function (req, res) {
 };
 
 // Get a single company
-exports.show = function (req, res) {
+/**
+ * Get details for one company, finding by Id. If 'complete' query parameter is set to true, the entire company
+ * information is returned, instead of just the profile.
+ * CastError is thrown by Mongoose if id string does not represent a valid ObjectId.
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.show = function (req, res, next) {
   Company.findById(req.params.id, function (err, company) {
     if (err) {
-      return handleError(res, err);
+      return next(err);
     }
     if (!company) {
       return res.status(404).send('Not Found');
     }
-    return res.json(company);
+    return res.status(200).json(company.profile);
   });
 };
 

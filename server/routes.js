@@ -6,6 +6,7 @@
 
 var config = require('./config/environment');
 var errors = require('./components/errors');
+var errorMiddleware = require('./components/error-middleware');
 var path = require('path');
 
 module.exports = function(app) {
@@ -34,4 +35,6 @@ module.exports = function(app) {
     .get(function(req, res) {
       res.sendFile(path.resolve(app.get('appPath') + '/index.html'));
     });
+
+  errorMiddleware(app);
 };

@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
+var timestamps = require('mongoose-timestamp');
 
 var CompanySchema = new Schema({
   name: {
@@ -34,6 +35,11 @@ var CompanySchema = new Schema({
     ref: 'User',
     required: true
   }]
+});
+
+CompanySchema.plugin(timestamps, {
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 });
 
 module.exports = mongoose.model('Company', CompanySchema);

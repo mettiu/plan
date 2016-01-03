@@ -36,18 +36,4 @@ var CompanySchema = new Schema({
   }]
 });
 
-/**
- * Define a simple virtual 'profile' for company.
- */
-CompanySchema
-  .virtual('profile')
-  .get(function () {
-    return {
-      '_id': this._id,
-      'name': this.name,
-      'info': this.info,
-      'active': this.active
-    };
-  });
-
 module.exports = mongoose.model('Company', CompanySchema);

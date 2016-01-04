@@ -39,6 +39,7 @@ function isAuthenticated() {
 }
 
 /**
+ * Creates authorization header from querystring parameter.
  * If Authorization token was sent as a querystring
  * like '...?access_token=xyz' then the token is moved
  * into header in the following form:

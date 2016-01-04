@@ -5,10 +5,11 @@ var passport = require('passport');
 var config = require('../config/environment');
 var jsonwebtoken = require('jsonwebtoken');
 var jwt = require('express-jwt');
+var validateJwt = jwt({secret: config.secrets.session});
 var compose = require('composable-middleware');
 var _ = require('lodash');
 var User = require('../api/user/user.model');
-var validateJwt = jwt({secret: config.secrets.session});
+var Company = require('../api/company/company.model');
 
 /**
  * Attaches the user object to the request if authenticated
@@ -88,6 +89,35 @@ function attachUserToRequest(req, res, next) {
     req.user = user;
     next();
   });
+}
+
+/**
+ * Attaches company data to req.
+ * When an API related to something which has a _company (id) field
+ * is called (i.e.: category or Team) you may want to extract the company
+ * data, in prder to allow further checks based on company data.
+ * For example, you may want to check is the user requesting the
+ * operation is an administrator for the category he is trying to
+ * operate on (i.e.: creation, update, ecc.).
+ * This middleware just expands company data from the req body _company field,
+ * setting req.company with the data retrieved from DB.
+ * Http 400 code is returned if:
+ * - no _company field found;
+ * - no company with the required _id found.
+ * Any errors returned by Mongoose should be managed by following middlewares
+ * (i.e.: CastError on _id).
+ * @param req
+ * @param res
+ * @param next
+ */
+function attachTargetCompanyToRequest(req, res, next) {
+  if(!req.body || !req.body._company) return res.status(400).send("Bad Request");
+  Company.findById(req.body._company, function(err, company) {
+    if (err) return next(err);
+    if (!company) return res.status(400).send("Bad Request");
+    req.company = company;
+    next();
+  })
 }
 
 /**
@@ -201,3 +231,4 @@ exports.isPlatformAdmin = isPlatformAdmin;
 exports.getTokenFromQuery = getTokenFromQuery;
 exports.attachUserToRequest = attachUserToRequest;
 exports.jwtMiddleware = jwtMiddleware;
+exports.attachTargetCompanyToRequest = attachTargetCompanyToRequest;

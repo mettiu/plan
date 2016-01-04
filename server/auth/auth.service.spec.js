@@ -14,9 +14,13 @@ var
   errorMiddleware = require('../components/error-middleware'),
   utils = require('../components/utils'),
   User = require('../api/user/user.model'),
-  auth = require('./auth.service');
+  auth = require('./auth.service'),
+  Company = require('../api/company/company.model'),
+  Category = require('../api/category/category.model');
 
 var userTemplate = {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'};
+var companyTemplate = {name: "test company", info: "test company info"};
+var categoryTemplate = {name: "test category", description: "test category description"};
 
 /**
  * Test function that returns req.user as a response with http 200
@@ -27,6 +31,17 @@ var userTemplate = {provider: 'local', name: 'Fake User One', email: 'testone@te
 function returnReqUser(req, res, next) {
   if (!req.user) return res.status(599).send("ERROR");
   return res.status(200).json(req.user);
+}
+
+/**
+ * Test function that returns req.company as a response with http 200
+ * @param req
+ * @param res
+ * @param next
+ */
+function returnReqCompany(req, res, next) {
+  if (!req.company) return res.status(599).send("ERROR");
+  return res.status(200).json(req.company);
 }
 
 /**
@@ -190,7 +205,7 @@ describe('JWT middleware test', function () {
     var router = express.Router();
     router.use(auth.jwtMiddleware);
     app.use(testPath, router.get('/', returnReqUser));
-    errorMiddleware(app);
+    errorMiddleware(router);
   });
 
   // remove all users from DB
@@ -277,7 +292,7 @@ describe('Login e2e test', function () {
       auth.attachUserToRequest
     );
     app.use(testPath, router.get('/', returnReqUser));
-    errorMiddleware(app);
+    errorMiddleware(router);
   });
 
   // remove all users from DB
@@ -338,6 +353,119 @@ describe('Login e2e test', function () {
       .set('Authorization', 'Bearer fake-token=:-)')
       .send()
       .expect(401)
+      //.expect('Content-Type', /json/)
+      .end(function (err, res) {
+        if (err) return done(err);
+        return done();
+      });
+  });
+
+});
+
+/**
+ * Test attachTargetCompanyToRequest middleware
+ */
+describe('attachTargetCompanyToRequest middleware test', function () {
+
+  var testPath = '/test/auth/attachTargetCompanyToRequest';
+  var company;
+  var category;
+
+  // set the test routes for this controller method
+  before(function () {
+    var router = express.Router();
+    router.use(
+      auth.attachTargetCompanyToRequest
+    );
+    app.use(testPath, router.get('/', returnReqCompany));
+    errorMiddleware(router);
+  });
+
+  // create the company needed for category tests
+  before(function (done) {
+    company = _.clone(companyTemplate);
+    Company.create(company, function (err, created) {
+      if (err) return done(err);
+      company = created;
+      return done();
+    });
+  });
+
+  // set category test data
+  before(function (done) {
+    category = _.clone(categoryTemplate);
+    category._company = company._id;
+
+    Category.create(category, function (err, inserted) {
+      if (err) return done(err);
+      category = inserted;
+      return done();
+    });
+  });
+
+  // remove all User, Company, Category from DB
+  after(function (done) {
+    utils.mongooseRemoveAll([User, Company, Category], done);
+  });
+
+  it('should attach target company to request', function (done) {
+    request(app)
+      .get(testPath)
+      .send(category)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(function (err, res) {
+        if (err) return done(err);
+        expect(res.body).to.have.property('_id', company._id.toString());
+        expect(res.body).to.have.property('name', company.name);
+        expect(res.body).to.have.property('info', company.info);
+        return done();
+      });
+  });
+
+  it('should not attach target company to request if company\'s id is missing', function (done) {
+    request(app)
+      .get(testPath)
+      .send(categoryTemplate)
+      .expect(400)
+      //.expect('Content-Type', /json/)
+      .end(function (err, res) {
+        if (err) return done(err);
+        return done();
+      });
+  });
+
+  it('should not attach target company to request if company object is missing', function (done) {
+    request(app)
+      .get(testPath)
+      .send({})
+      .expect(400)
+      //.expect('Content-Type', /json/)
+      .end(function (err, res) {
+        if (err) return done(err);
+        return done();
+      });
+  });
+
+  it('should not attach target company to request if company id is wrong', function (done) {
+    company._id = mongoose.Types.ObjectId();
+    request(app)
+      .get(testPath)
+      .send(company)
+      .expect(400)
+      //.expect('Content-Type', /json/)
+      .end(function (err, res) {
+        if (err) return done(err);
+        return done();
+      });
+  });
+
+  it('should not attach target company to request if company id is wrong and malformed', function (done) {
+    company._id = 'fake-id';
+    request(app)
+      .get(testPath)
+      .send(company)
+      .expect(400)
       //.expect('Content-Type', /json/)
       .end(function (err, res) {
         if (err) return done(err);

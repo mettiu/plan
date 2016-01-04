@@ -61,6 +61,34 @@ function getTokenFromQuery(req, res, next) {
   return next();
 }
 
+/**
+ * Attaches user data to req,
+ * expanding the data extracted from the token by JWT.
+ * Before this middleaware JWT middleware should be called.
+ * JWT decodes the token read from 'authorization' header
+ * and sets the decoded data in req.user.
+ * Since the user _id is stored in the token, this middleware
+ * retrieves the user data from DB and sets this data into req.user.
+ * If the user _id is not found in teh DB this middleware
+ * returns 401 'Unauthorized'.
+ * Then next() middleware is called.
+ * This should be the third call for authenticated routes, where
+ * the pipeline should be:
+ * - getTokenFromQuery - bring the token from req query to req header
+ * - jwt validation middleware - sets req.user object with jwt data
+ * - attachUserToRequest - expands user data in req.user
+ * @param req
+ * @param res
+ * @param next
+ */
+function attachUserToRequest(req, res, next) {
+  User.findById(req.user._id, function (err, user) {
+    if (err) return next(err);
+    if (!user) return res.status(401).send('Unauthorized');
+    req.user = user;
+    next();
+  });
+}
 
 /**
  * Checks if the user role meets the minimum requirements of the route
@@ -158,3 +186,4 @@ exports.isAdminForCompany = isAdminForCompany;
 exports.isAddressedUserEnabledForAddressedCompany = isAddressedUserEnabledForAddressedCompany;
 exports.isPlatformAdmin = isPlatformAdmin;
 exports.getTokenFromQuery = getTokenFromQuery;
+exports.attachUserToRequest = attachUserToRequest;

@@ -188,7 +188,7 @@ describe('JWT middleware test', function () {
   // set the test routes for this controller method
   before(function () {
     var router = express.Router();
-    router.use(jwt({secret: config.secrets.session}));
+    router.use(auth.jwtMiddleware());
     app.use(testPath, router.get('/', returnReqUser));
     errorMiddleware(app);
   });
@@ -273,7 +273,7 @@ describe('Login e2e test', function () {
     var router = express.Router();
     router.use(
       auth.getTokenFromQuery,
-      jwt({secret: config.secrets.session}),
+      auth.jwtMiddleware(),
       auth.attachUserToRequest
     );
     app.use(testPath, router.get('/', returnReqUser));

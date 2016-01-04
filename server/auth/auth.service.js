@@ -3,12 +3,12 @@
 var mongoose = require('mongoose');
 var passport = require('passport');
 var config = require('../config/environment');
-var jwt = require('jsonwebtoken');
-var expressJwt = require('express-jwt');
+var jsonwebtoken = require('jsonwebtoken');
+var jwt = require('express-jwt');
 var compose = require('composable-middleware');
 var _ = require('lodash');
 var User = require('../api/user/user.model');
-var validateJwt = expressJwt({secret: config.secrets.session});
+var validateJwt = jwt({secret: config.secrets.session});
 
 /**
  * Attaches the user object to the request if authenticated
@@ -109,10 +109,20 @@ function hasRole(roleRequired) {
 }
 
 /**
+ * Wrapper for jwt middleware.
+ * Everything regarding JWT should be managed in this module
+ * in order to avoid import duplication for library JWT.
+ * @returns jwt middleware function parametrized by the closure.
+ */
+function jwtMiddleware() {
+  return jwt({secret: config.secrets.session});
+}
+
+/**
  * Returns a jwt token signed by the app secret
  */
 function signToken(id) {
-  return jwt.sign({_id: id}, config.secrets.session, {expiresIn: 60 * 60 * 5});
+  return jsonwebtoken.sign({_id: id}, config.secrets.session, {expiresIn: '5h'});
 }
 
 /**
@@ -187,3 +197,4 @@ exports.isAddressedUserEnabledForAddressedCompany = isAddressedUserEnabledForAdd
 exports.isPlatformAdmin = isPlatformAdmin;
 exports.getTokenFromQuery = getTokenFromQuery;
 exports.attachUserToRequest = attachUserToRequest;
+exports.jwtMiddleware = jwtMiddleware;

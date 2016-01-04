@@ -13,14 +13,19 @@ var
   config = require('../config/environment'),
   errorMiddleware = require('../components/error-middleware'),
   utils = require('../components/utils'),
-  User = require('../api/user/user.model'),
   auth = require('./auth.service'),
+  User = require('../api/user/user.model'),
   Company = require('../api/company/company.model'),
   Category = require('../api/category/category.model');
 
 var userTemplate = {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'};
-var companyTemplate = {name: "test company", info: "test company info"};
+var companyTemplate = {name: "test company", info: "test company info", adminUsers: []};
 var categoryTemplate = {name: "test category", description: "test category description"};
+var userTemplateArray = [
+  {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'},
+  {provider: 'local', name: 'Fake User Two', email: 'testtwo@test.com', password: 'passwordtwo'},
+  {provider: 'local', name: 'Fake User Three', email: 'testthree@test.com', password: 'passwordthree'}
+];
 
 /**
  * Test function that returns req.user as a response with http 200
@@ -471,6 +476,194 @@ describe('attachTargetCompanyToRequest middleware test', function () {
         if (err) return done(err);
         return done();
       });
+  });
+
+});
+
+/**
+ * Test isAdminForTargetCompany middleware
+ */
+describe('isAdminForTargetCompany middleware test', function () {
+
+  var testPath = '/test/auth/isAdminForTargetCompany';
+  var userArray;
+  var company;
+  var category;
+  var user;
+
+  // set the test routes for this controller method
+  before(function () {
+    var router = express.Router();
+    router.use(
+      auth.getTokenFromQuery,
+      auth.jwtMiddleware,
+      auth.attachUserToRequest,
+      auth.attachTargetCompanyToRequest,
+      auth.isAdminForTargetCompany
+    );
+    app.use(testPath, router.get('/', returnReqCompany));
+    errorMiddleware(router);
+  });
+
+  // set users test data
+  before(function (done) {
+    userArray = _.clone(userTemplateArray);
+
+    User.create(userArray, function (err, insertedArray) {
+      if (err) return done(err);
+      insertedArray.forEach(function (item, i) {
+        userArray[i] = item;
+      });
+      return done();
+    });
+
+  });
+
+  // create the company needed for category tests
+  before(function (done) {
+    company = _.clone(companyTemplate);
+    userArray.forEach(function(user, i) {
+      if (i <= 1) company.adminUsers.push(user._id); // insert only 2 on 3 users as admin
+    });
+    Company.create(company, function (err, created) {
+      if (err) return done(err);
+      company = created;
+      return done();
+    });
+  });
+
+  // set category test data
+  before(function (done) {
+    category = _.clone(categoryTemplate);
+    category._company = company._id;
+
+    Category.create(category, function (err, inserted) {
+      if (err) return done(err);
+      category = inserted;
+      return done();
+    });
+  });
+
+  // remove all User, Company, Category from DB
+  after(function (done) {
+    utils.mongooseRemoveAll([User, Company, Category], done);
+  });
+
+  describe('test with 1st authorized user', function() {
+
+    var authToken;
+
+    // login user
+    before(function (done) {
+
+      user = userArray[0];
+
+      restLogin(user.email, user.password, function (err, res) {
+        if (err) return done(err);
+        expect(res.body).to.be.instanceOf(Object);
+        expect(res.body).to.have.property('token');
+        jsonwebtoken.verify(res.body.token, config.secrets.session, function (err, decoded) {
+          if (err) return done(err);
+          expect(decoded._id).to.be.equal('' + user._id);
+          authToken = res.body.token;
+          return done();
+        });
+      });
+    });
+
+    it('should authorize', function (done) {
+      request(app)
+        .get(testPath)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(category)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.have.property('_id', company._id.toString());
+          expect(res.body).to.have.property('name', company.name);
+          expect(res.body).to.have.property('info', company.info);
+          return done();
+        });
+    });
+
+  });
+
+  describe('test with 2nd authorized user', function() {
+
+    var authToken;
+
+    // login user
+    before(function (done) {
+
+      user = userArray[1];
+
+      restLogin(user.email, user.password, function (err, res) {
+        if (err) return done(err);
+        expect(res.body).to.be.instanceOf(Object);
+        expect(res.body).to.have.property('token');
+        jsonwebtoken.verify(res.body.token, config.secrets.session, function (err, decoded) {
+          if (err) return done(err);
+          expect(decoded._id).to.be.equal('' + user._id);
+          authToken = res.body.token;
+          return done();
+        });
+      });
+    });
+
+    it('should authorize', function (done) {
+      request(app)
+        .get(testPath)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(category)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.have.property('_id', company._id.toString());
+          expect(res.body).to.have.property('name', company.name);
+          expect(res.body).to.have.property('info', company.info);
+          return done();
+        });
+    });
+
+  });
+
+  describe('test with 3rd authorized user', function() {
+
+    var authToken;
+
+    // login user
+    before(function (done) {
+
+      user = userArray[2];
+
+      restLogin(user.email, user.password, function (err, res) {
+        if (err) return done(err);
+        expect(res.body).to.be.instanceOf(Object);
+        expect(res.body).to.have.property('token');
+        jsonwebtoken.verify(res.body.token, config.secrets.session, function (err, decoded) {
+          if (err) return done(err);
+          expect(decoded._id).to.be.equal('' + user._id);
+          authToken = res.body.token;
+          return done();
+        });
+      });
+    });
+
+    it('should NOT authorize', function (done) {
+      request(app)
+        .get(testPath)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(category)
+        .expect(401)
+        //.expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          return done();
+        });
+    });
+
   });
 
 });

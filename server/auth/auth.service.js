@@ -14,6 +14,7 @@ var Company = require('../api/company/company.model');
 /**
  * Attaches the user object to the request if authenticated
  * Otherwise returns 403
+ * DEPRECATED
  */
 function isAuthenticated() {
   return compose()
@@ -121,7 +122,25 @@ function attachTargetCompanyToRequest(req, res, next) {
 }
 
 /**
+ * Checks if req.user is admin for req.company.
+ * This middleware expects to find req.user and req.company.
+ * If req.company._id is not found in req.user._adminCompanies,
+ * http 401 'Unauthorized' is returned.
+ * @param req
+ * @param res
+ * @param next
+ */
+function isAdminForTargetCompany (req, res, next) {
+  var found = _.find(req.company.adminUsers, function (_user) {
+    return _user.toString() === req.user._id.toString();
+  });
+  if (!found) return res.status(401).send('Unauthorized');
+  next();
+}
+
+/**
  * Checks if the user role meets the minimum requirements of the route
+ * DEPRECATED
  */
 function hasRole(roleRequired) {
   if (!roleRequired) throw new Error('Required role needs to be set');
@@ -170,6 +189,7 @@ function setTokenCookie(req, res) {
 
 /**
  * Check if user is allowed to admin the addressed company
+ * DEPRECATED
  *
  * @param req
  * @param res
@@ -187,6 +207,7 @@ function isAdminForCompany(req, res, next) {
 
 /**
  * Check if addressedUser is enabled for the addressedCompany
+ * DEPRECATED
  *
  * @param req
  * @param res
@@ -232,3 +253,4 @@ exports.getTokenFromQuery = getTokenFromQuery;
 exports.attachUserToRequest = attachUserToRequest;
 exports.jwtMiddleware = jwtMiddleware;
 exports.attachTargetCompanyToRequest = attachTargetCompanyToRequest;
+exports.isAdminForTargetCompany = isAdminForTargetCompany;

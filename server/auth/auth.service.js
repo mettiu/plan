@@ -114,9 +114,12 @@ function hasRole(roleRequired) {
  * in order to avoid import duplication for library JWT.
  * @returns jwt middleware function parametrized by the closure.
  */
-function jwtMiddleware() {
+function jwtMiddlewareWrapper() {
   return jwt({secret: config.secrets.session});
 }
+// jwtMiddleware is assigned with the function returned by the jwtMiddlewareWrapper,
+// which is the middleware provided by the JWT library.
+var jwtMiddleware = jwtMiddlewareWrapper();
 
 /**
  * Returns a jwt token signed by the app secret

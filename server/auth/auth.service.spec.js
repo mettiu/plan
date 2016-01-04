@@ -188,7 +188,7 @@ describe('JWT middleware test', function () {
   // set the test routes for this controller method
   before(function () {
     var router = express.Router();
-    router.use(auth.jwtMiddleware());
+    router.use(auth.jwtMiddleware);
     app.use(testPath, router.get('/', returnReqUser));
     errorMiddleware(app);
   });
@@ -273,7 +273,7 @@ describe('Login e2e test', function () {
     var router = express.Router();
     router.use(
       auth.getTokenFromQuery,
-      auth.jwtMiddleware(),
+      auth.jwtMiddleware,
       auth.attachUserToRequest
     );
     app.use(testPath, router.get('/', returnReqUser));
@@ -315,7 +315,6 @@ describe('Login e2e test', function () {
   after(function (done) {
     utils.mongooseRemoveAll([User], done);
   });
-
 
   it('should authenticate a valid token', function (done) {
     request(app)

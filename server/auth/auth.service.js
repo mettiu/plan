@@ -39,6 +39,29 @@ function isAuthenticated() {
 }
 
 /**
+ * If Authorization token was sent as a querystring
+ * like '...?access_token=xyz' then the token is moved
+ * into header in the following form:
+ * authorization: 'Bearer xyz'
+ * Then next() middleware is called.
+ * This should be the first call for authenticated routes, where
+ * the pipeline should be:
+ * - getTokenFromQuery - bring the token from req query to req header
+ * - jwt validation middleware - sets req.user object with jwt data
+ * - attachUserToRequest - expands user data in req.user
+ * @param req
+ * @param res
+ * @param next
+ */
+function getTokenFromQuery(req, res, next) {
+  if (req.query && req.query.hasOwnProperty('access_token')) {
+    req.headers.authorization = 'Bearer ' + req.query.access_token;
+  }
+  return next();
+}
+
+
+/**
  * Checks if the user role meets the minimum requirements of the route
  */
 function hasRole(roleRequired) {
@@ -133,3 +156,4 @@ exports.setTokenCookie = setTokenCookie;
 exports.isAdminForCompany = isAdminForCompany;
 exports.isAddressedUserEnabledForAddressedCompany = isAddressedUserEnabledForAddressedCompany;
 exports.isPlatformAdmin = isPlatformAdmin;
+exports.getTokenFromQuery = getTokenFromQuery;

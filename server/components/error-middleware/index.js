@@ -4,26 +4,40 @@
 
 'use strict';
 
-module.exports = function(app) {
+module.exports = function (app) {
 
-app.use(
-  validationError,
-  castError,
-  fatalError
-);
+  app.use(
+    unauthorizedError,
+    validationError,
+    castError,
+    fatalError
+  );
 
   /**
-   * Catches the Mongoose Validation Errors and sends 403 (Forbidden) http response to the client.
+   * Catches the Unauthorized error, coming from JWT check middleware.
+   * @param err
+   * @param req
+   * @param res
+   * @param next
+   */
+  function unauthorizedError(err, req, res, next) {
+    if (err.name !== 'UnauthorizedError') return next(err);
+    //TODO: check if something less than the whole error should be sent to client
+    return res.status(401).json(err);
+  }
+
+  /**
+   * Catches the Mongoose Validation Errors and sends 422 (Unprocessable Entity) http response to the client.
    * Json representation of error is also sent to the client.
    * @param err
    * @param req
    * @param res
    * @param next
    */
-  function validationError (err, req, res, next) {
+  function validationError(err, req, res, next) {
     if (err.name !== 'ValidationError') return next(err);
     //TODO: check if something less than the whole error should be sent to client
-    return res.status(403).json(err);
+    return res.status(422).json(err);
   }
 
   /**
@@ -34,7 +48,7 @@ app.use(
    * @param res
    * @param next
    */
-  function castError (err, req, res, next) {
+  function castError(err, req, res, next) {
     if (err.name !== 'CastError') return next(err);
     //TODO: check if something less than the whole error should be sent to client
     return res.status(404).send("Not Found");

@@ -29,7 +29,8 @@ exports.create = function (req, res, next) {
  */
 exports.index = function (req, res, next) {
   var query = {};
-  if (req.body.active !== undefined && typeof(req.body.active) === "boolean") query = {active: req.body.active};
+  if (req.body.active !== undefined && typeof(req.body.active) === "boolean")
+    query.active = req.body.active;
   Category.find(query, function (err, categories) {
     if (err) {
       return next(err);

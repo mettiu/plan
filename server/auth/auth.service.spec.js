@@ -39,14 +39,18 @@ function returnReqUser(req, res, next) {
 }
 
 /**
- * Test function that returns req.company as a response with http 200
+ * Test function that returns req[name] as a response with http 200.
+ * If name is not passed, it defaults to 'target'.
  * @param req
  * @param res
  * @param next
  */
-function returnReqCompany(req, res, next) {
-  if (!req.company) return res.status(599).send("ERROR");
-  return res.status(200).json(req.company);
+function returnReqData(name) {
+  if (!name) name = 'target';
+  return function(req, res, next) {
+    if (!req[name]) return res.status(599).send("ERROR");
+    return res.status(200).json(req[name]);
+  }
 }
 
 /**
@@ -368,6 +372,59 @@ describe('Login e2e test', function () {
 });
 
 /**
+ * Test attachTargetObjectIdToRequest middleware
+ */
+describe('attachTargetObjectIdToRequest middleware test', function () {
+
+  var testPath = '/test/auth/attachTargetObjectIdToRequest';
+  var testId = mongoose.Types.ObjectId();
+
+  // set the test routes for this controller method
+  before(function () {
+    var router = express.Router();
+
+    //one route to test the middleware with no parameter
+    router.get('/',
+      auth.attachTargetObjectIdToRequest('company'),
+      returnReqData('company'));
+
+    //one route to test the middleware with a parameter
+    router.get('/:id',
+      auth.attachTargetObjectIdToRequest('company'),
+      returnReqData('company'));
+    app.use(testPath, router);
+
+    errorMiddleware(router);
+  });
+
+  it('should attach target id to request', function (done) {
+    request(app)
+      .get(testPath + '/' + testId.toString())
+      .send()
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(function (err, res) {
+        if (err) return done(err);
+        expect(res.body).to.have.property('_id', testId.toString());
+        return done();
+      });
+  });
+
+  it('should not attach target id to request', function (done) {
+    request(app)
+      .get(testPath + '/')
+      .send()
+      .expect(599)
+      //.expect('Content-Type', /json/)
+      .end(function (err, res) {
+        if (err) return done(err);
+        return done();
+      });
+  });
+
+});
+
+/**
  * Test attachTargetCompanyToRequest middleware
  */
 describe('attachTargetCompanyToRequest middleware test', function () {
@@ -382,7 +439,7 @@ describe('attachTargetCompanyToRequest middleware test', function () {
     router.use(
       auth.attachTargetCompanyToRequest
     );
-    app.use(testPath, router.get('/', returnReqCompany));
+    app.use(testPath, router.get('/', returnReqData('company')));
     errorMiddleware(router);
   });
 
@@ -501,7 +558,7 @@ describe('isAdminForTargetCompany middleware test', function () {
       auth.attachTargetCompanyToRequest,
       auth.isAdminForTargetCompany
     );
-    app.use(testPath, router.get('/', returnReqCompany));
+    app.use(testPath, router.get('/', returnReqData('company')));
     errorMiddleware(router);
   });
 

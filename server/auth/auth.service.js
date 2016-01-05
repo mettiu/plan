@@ -2,12 +2,14 @@
 
 var mongoose = require('mongoose');
 var passport = require('passport');
-var config = require('../config/environment');
+var conditional = require('express-conditional-middleware');
 var jsonwebtoken = require('jsonwebtoken');
 var jwt = require('express-jwt');
+var config = require('../config/environment');
 var validateJwt = jwt({secret: config.secrets.session});
 var compose = require('composable-middleware');
 var _ = require('lodash');
+
 var User = require('../api/user/user.model');
 var Company = require('../api/company/company.model');
 
@@ -93,6 +95,35 @@ function attachUserToRequest(req, res, next) {
 }
 
 /**
+ * Attaches target object data to req.
+ * Some API belong to paths ending with /:id.
+ * These may be related to delete or update methods.
+ * This middleware takes an object model as the first parameter
+ * and a second optional string parameter with the name of the req property
+ * to set the object into. 'name' parameter defaults to 'target'.
+ * If req.params.id is found, req.target._id is set with id value.
+ * Otherwise, nothing is done.
+ * @param {string} [name=target] name
+ *  The name of the parameter set into req. It's the object that will contain { '_id': id } value
+ */
+function attachTargetObjectIdToRequest(name) {
+  if (!name) name = 'target';
+
+  // if parameter req.params.id is found (it means that :id route parameter
+  // is present in the http call path) then middleware is returned
+  return conditional(
+    function(req, res, next) {
+      return !!req.params.id;
+    },
+    function (req, res, next) {
+      req[name] = {};
+      req[name]._id = req.params.id;
+      next();
+    }
+  );
+}
+
+/**
  * Attaches company data to req.
  * When an API related to something which has a _company (id) field
  * is called (i.e.: category or Team) you may want to extract the company
@@ -112,8 +143,8 @@ function attachUserToRequest(req, res, next) {
  * @param next
  */
 function attachTargetCompanyToRequest(req, res, next) {
-  if(!req.body || !req.body._company) return res.status(400).send("Bad Request");
-  Company.findById(req.body._company, function(err, company) {
+  if (!req.body || !req.body._company) return res.status(400).send("Bad Request");
+  Company.findById(req.body._company, function (err, company) {
     if (err) return next(err);
     if (!company) return res.status(400).send("Bad Request");
     req.company = company;
@@ -130,7 +161,7 @@ function attachTargetCompanyToRequest(req, res, next) {
  * @param res
  * @param next
  */
-function isAdminForTargetCompany (req, res, next) {
+function isAdminForTargetCompany(req, res, next) {
   var found = _.find(req.company.adminUsers, function (_user) {
     return _user.toString() === req.user._id.toString();
   });
@@ -238,7 +269,7 @@ function isAddressedUserEnabledForAddressedCompany(req, res, next) {
  * @param res
  * @param next
  */
-function isPlatformAdmin (req, res, next) {
+function isPlatformAdmin(req, res, next) {
   next();
 }
 
@@ -252,5 +283,6 @@ exports.isPlatformAdmin = isPlatformAdmin;
 exports.getTokenFromQuery = getTokenFromQuery;
 exports.attachUserToRequest = attachUserToRequest;
 exports.jwtMiddleware = jwtMiddleware;
+exports.attachTargetObjectIdToRequest = attachTargetObjectIdToRequest;
 exports.attachTargetCompanyToRequest = attachTargetCompanyToRequest;
 exports.isAdminForTargetCompany = isAdminForTargetCompany;

@@ -2,7 +2,6 @@
 
 var _ = require('lodash');
 var Category = require('./category.model');
-var errors = require('../../components/errors');
 
 /**
  * Creates new category in DB.

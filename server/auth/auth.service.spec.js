@@ -26,6 +26,7 @@ var userTemplateArray = [
   {provider: 'local', name: 'Fake User Two', email: 'testtwo@test.com', password: 'passwordtwo'},
   {provider: 'local', name: 'Fake User Three', email: 'testthree@test.com', password: 'passwordthree'}
 ];
+var companyFakeData = {fake: 'data'};
 
 /**
  * Test function that returns req.user as a response with http 200
@@ -41,13 +42,11 @@ function returnReqUser(req, res, next) {
 /**
  * Test function that returns req[name] as a response with http 200.
  * If name is not passed, it defaults to 'target'.
- * @param req
- * @param res
- * @param next
+ * @param name
  */
 function returnReqData(name) {
   if (!name) name = 'target';
-  return function(req, res, next) {
+  return function (req, res, next) {
     if (!req[name]) return res.status(599).send("ERROR");
     return res.status(200).json(req[name]);
   }
@@ -74,6 +73,19 @@ function returnAuthorizationHeader(req, res, next) {
 function mockSetUserIdIntoReq(req, res, next) {
   if (!(req.query && req.query.hasOwnProperty('_id'))) return res.status(401).send("Unauthorized");
   req.user = {'_id': req.query._id};
+  next();
+}
+
+/**
+ * Mock for a middleware that sets req.company in order to make fail
+ * any if (!req.company) check.
+ * This is a very simple mock for JWT middleware.
+ * @param req
+ * @param res
+ * @param next
+ */
+function mockSetFakeCompanyIntoReq(req, res, next) {
+  req.company = companyFakeData;
   next();
 }
 
@@ -372,45 +384,106 @@ describe('Login e2e test', function () {
 });
 
 /**
- * Test attachTargetObjectIdToRequest middleware
+ * Test attachCompanyFromParam middleware
  */
-describe('attachTargetObjectIdToRequest middleware test', function () {
+describe('attachCompanyFromParam middleware test', function () {
 
-  var testPath = '/test/auth/attachTargetObjectIdToRequest';
+  var testPath = '/test/auth/attachCompanyFromParam';
   var testId = mongoose.Types.ObjectId();
+  var company;
+  var category;
 
   // set the test routes for this controller method
   before(function () {
     var router = express.Router();
 
+    router.param('id', auth.attachCompanyFromParam(Category));
+
     //one route to test the middleware with no parameter
     router.get('/',
-      auth.attachTargetObjectIdToRequest('company'),
       returnReqData('company'));
 
     //one route to test the middleware with a parameter
     router.get('/:id',
-      auth.attachTargetObjectIdToRequest('company'),
       returnReqData('company'));
+
+    //one route to test the middleware with a parameter and with company already set
+    router.get('/no/:id',
+      mockSetFakeCompanyIntoReq,
+      returnReqData('company'));
+
     app.use(testPath, router);
 
     errorMiddleware(router);
   });
 
-  it('should attach target id to request', function (done) {
+  // create the company needed for category tests
+  before(function (done) {
+    company = _.clone(companyTemplate);
+    Company.create(company, function (err, created) {
+      if (err) return done(err);
+      company = created;
+      return done();
+    });
+  });
+
+  // set category test data
+  before(function (done) {
+    category = _.clone(categoryTemplate);
+    category._company = company._id;
+
+    Category.create(category, function (err, inserted) {
+      if (err) return done(err);
+      category = inserted;
+      return done();
+    });
+  });
+
+  // remove all User, Company, Category from DB
+  after(function (done) {
+    utils.mongooseRemoveAll([User, Company, Category], done);
+  });
+
+  it('should attach company to request', function (done) {
     request(app)
-      .get(testPath + '/' + testId.toString())
+      .get(testPath + '/' + category._id)
       .send()
       .expect(200)
       .expect('Content-Type', /json/)
       .end(function (err, res) {
         if (err) return done(err);
-        expect(res.body).to.have.property('_id', testId.toString());
+        expect(res.body).to.have.property('_id', company._id.toString());
+        expect(res.body).to.have.property('name', company.name);
         return done();
       });
   });
 
-  it('should not attach target id to request', function (done) {
+  it('should not attach company to request if req.company is already set', function (done) {
+    request(app)
+      .get(testPath + '/no/' + category._id)
+      .send()
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(function (err, res) {
+        if (err) return done(err);
+        expect(_.isEqual(res.body, companyFakeData)).to.be.true;
+        return done();
+      });
+  });
+
+  it('should not attach company to request if company id is wrong (no company with that id)', function (done) {
+    request(app)
+      .get(testPath + '/' + mongoose.Types.ObjectId())
+      .send()
+      .expect(400)
+      //.expect('Content-Type', /json/)
+      .end(function (err, res) {
+        if (err) return done(err);
+        return done();
+      });
+  });
+
+  it('should not attach company to request if :id is not set', function (done) {
     request(app)
       .get(testPath + '/')
       .send()
@@ -425,11 +498,11 @@ describe('attachTargetObjectIdToRequest middleware test', function () {
 });
 
 /**
- * Test attachTargetCompanyToRequest middleware
+ * Test attachTargetCompanyFromBodyToRequest middleware
  */
-describe('attachTargetCompanyToRequest middleware test', function () {
+describe('attachCompanyFromBody middleware test', function () {
 
-  var testPath = '/test/auth/attachTargetCompanyToRequest';
+  var testPath = '/test/auth/attachCompanyFromBody';
   var company;
   var category;
 
@@ -437,7 +510,7 @@ describe('attachTargetCompanyToRequest middleware test', function () {
   before(function () {
     var router = express.Router();
     router.use(
-      auth.attachTargetCompanyToRequest
+      auth.attachCompanyFromBody
     );
     app.use(testPath, router.get('/', returnReqData('company')));
     errorMiddleware(router);
@@ -485,7 +558,7 @@ describe('attachTargetCompanyToRequest middleware test', function () {
       });
   });
 
-  it('should not attach target company to request if company\'s id is missing', function (done) {
+  it('should pass and not attach target company to request if company\'s id is missing', function (done) {
     request(app)
       .get(testPath)
       .send(categoryTemplate)
@@ -497,7 +570,7 @@ describe('attachTargetCompanyToRequest middleware test', function () {
       });
   });
 
-  it('should not attach target company to request if company object is missing', function (done) {
+  it('should pass and not attach target company to request if company object is missing', function (done) {
     request(app)
       .get(testPath)
       .send({})
@@ -510,10 +583,10 @@ describe('attachTargetCompanyToRequest middleware test', function () {
   });
 
   it('should not attach target company to request if company id is wrong', function (done) {
-    company._id = mongoose.Types.ObjectId();
+    category._company = mongoose.Types.ObjectId();
     request(app)
       .get(testPath)
-      .send(company)
+      .send(category)
       .expect(400)
       //.expect('Content-Type', /json/)
       .end(function (err, res) {
@@ -523,10 +596,10 @@ describe('attachTargetCompanyToRequest middleware test', function () {
   });
 
   it('should not attach target company to request if company id is wrong and malformed', function (done) {
-    company._id = 'fake-id';
+    category._company = 'fake-id';
     request(app)
       .get(testPath)
-      .send(company)
+      .send(category)
       .expect(400)
       //.expect('Content-Type', /json/)
       .end(function (err, res) {
@@ -546,19 +619,33 @@ describe('isAdminForTargetCompany middleware test', function () {
   var userArray;
   var company;
   var category;
+  var localCategory;
   var user;
 
   // set the test routes for this controller method
   before(function () {
     var router = express.Router();
-    router.use(
+
+    router.param('id', auth.attachCompanyFromParam(Category));
+
+    router.get('/',
       auth.getTokenFromQuery,
       auth.jwtMiddleware,
       auth.attachUserToRequest,
-      auth.attachTargetCompanyToRequest,
-      auth.isAdminForTargetCompany
-    );
-    app.use(testPath, router.get('/', returnReqData('company')));
+      auth.attachCompanyFromBody,
+      auth.isAdminForTargetCompany,
+      returnReqData('company'));
+
+    router.get('/:id',
+      auth.getTokenFromQuery,
+      auth.jwtMiddleware,
+      auth.attachUserToRequest,
+      auth.attachCompanyFromBody,
+      auth.isAdminForTargetCompany,
+      returnReqData('company'));
+
+    app.use(testPath, router);
+    app.use(testPath, router);
     errorMiddleware(router);
   });
 
@@ -579,7 +666,7 @@ describe('isAdminForTargetCompany middleware test', function () {
   // create the company needed for category tests
   before(function (done) {
     company = _.clone(companyTemplate);
-    userArray.forEach(function(user, i) {
+    userArray.forEach(function (user, i) {
       if (i <= 1) company.adminUsers.push(user._id); // insert only 2 on 3 users as admin
     });
     Company.create(company, function (err, created) {
@@ -597,6 +684,8 @@ describe('isAdminForTargetCompany middleware test', function () {
     Category.create(category, function (err, inserted) {
       if (err) return done(err);
       category = inserted;
+      localCategory = _.clone(category._doc);
+      localCategory._company = mongoose.Types.ObjectId(); // change id to be sure it's not taken from here!
       return done();
     });
   });
@@ -606,7 +695,7 @@ describe('isAdminForTargetCompany middleware test', function () {
     utils.mongooseRemoveAll([User, Company, Category], done);
   });
 
-  describe('test with 1st authorized user', function() {
+  describe('test with 1st authorized user', function () {
 
     var authToken;
 
@@ -628,7 +717,7 @@ describe('isAdminForTargetCompany middleware test', function () {
       });
     });
 
-    it('should authorize', function (done) {
+    it('should authorize / path', function (done) {
       request(app)
         .get(testPath)
         .set('authorization', 'Bearer ' + authToken)
@@ -644,9 +733,25 @@ describe('isAdminForTargetCompany middleware test', function () {
         });
     });
 
+    it('should authorize /:id path', function (done) {
+      request(app)
+        .get(testPath + '/' + category._id)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(localCategory)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.have.property('_id', company._id.toString());
+          expect(res.body).to.have.property('name', company.name);
+          expect(res.body).to.have.property('info', company.info);
+          return done();
+        });
+    });
+
   });
 
-  describe('test with 2nd authorized user', function() {
+  describe('test with 2nd authorized user', function () {
 
     var authToken;
 
@@ -668,7 +773,7 @@ describe('isAdminForTargetCompany middleware test', function () {
       });
     });
 
-    it('should authorize', function (done) {
+    it('should authorize / path', function (done) {
       request(app)
         .get(testPath)
         .set('authorization', 'Bearer ' + authToken)
@@ -684,9 +789,25 @@ describe('isAdminForTargetCompany middleware test', function () {
         });
     });
 
+    it('should authorize /:id path', function (done) {
+      request(app)
+        .get(testPath + '/' + category._id)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(localCategory)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.have.property('_id', company._id.toString());
+          expect(res.body).to.have.property('name', company.name);
+          expect(res.body).to.have.property('info', company.info);
+          return done();
+        });
+    });
+
   });
 
-  describe('test with 3rd authorized user', function() {
+  describe('test with 3rd authorized user', function () {
 
     var authToken;
 
@@ -708,11 +829,24 @@ describe('isAdminForTargetCompany middleware test', function () {
       });
     });
 
-    it('should NOT authorize', function (done) {
+    it('should NOT authorize / path', function (done) {
       request(app)
         .get(testPath)
         .set('authorization', 'Bearer ' + authToken)
         .send(category)
+        .expect(401)
+        //.expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          return done();
+        });
+    });
+
+    it('should authorize /:id path', function (done) {
+      request(app)
+        .get(testPath + '/' + category._id)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(localCategory)
         .expect(401)
         //.expect('Content-Type', /json/)
         .end(function (err, res) {

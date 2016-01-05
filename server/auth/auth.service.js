@@ -94,43 +94,46 @@ function attachUserToRequest(req, res, next) {
   });
 }
 
-/**
- * Attaches target object data to req.
- * Some API belong to paths ending with /:id.
- * These may be related to delete or update methods.
- * This middleware takes an object model as the first parameter
- * and a second optional string parameter with the name of the req property
- * to set the object into. 'name' parameter defaults to 'target'.
- * If req.params.id is found, req.target._id is set with id value.
- * Otherwise, nothing is done.
- * @param {string} [name=target] name
- *  The name of the parameter set into req. It's the object that will contain { '_id': id } value
- */
-function attachTargetObjectIdToRequest(name) {
-  if (!name) name = 'target';
 
-  // if parameter req.params.id is found (it means that :id route parameter
-  // is present in the http call path) then middleware is returned
-  return conditional(
-    function(req, res, next) {
-      return !!req.params.id;
-    },
-    function (req, res, next) {
-      req[name] = {};
-      req[name]._id = req.params.id;
-      next();
-    }
-  );
+/**
+ * Attaches the company to req.
+ * Returns a function to user in router.param for those
+ * routes that accept model Id (Category or Test) as a param.
+ * The param function sets the company corresponding to
+ * _company for the model into a 'company' field in req.
+ * @param model
+ * @returns {Function} to be used in router.param call
+ */
+function attachCompanyFromParam(model) {
+  // if mandatory model parameter is not set returns a middleware that crashes!
+  if (!model) return function (res, req, next) {
+    return next(new Error("Missing Model parameter!"))
+  };
+
+  return function (req, res, next, param) {
+    //TODO: create a static method in model definition
+    model
+      .findById(param)
+      .populate('_company')
+      .exec(function (err, found) {
+        if (err) return next(err);
+        if (!found) return res.status(400).send("Bad Request");
+        req.company = found._company;
+        next();
+      });
+  }
+
 }
 
 /**
  * Attaches company data to req.
  * When an API related to something which has a _company (id) field
  * is called (i.e.: category or Team) you may want to extract the company
- * data, in prder to allow further checks based on company data.
+ * data, in order to allow further checks based on company data.
  * For example, you may want to check is the user requesting the
  * operation is an administrator for the category he is trying to
  * operate on (i.e.: creation, update, ecc.).
+ * If company data is already present in req.body this middleware is skipped.
  * This middleware just expands company data from the req body _company field,
  * setting req.company with the data retrieved from DB.
  * Http 400 code is returned if:
@@ -142,15 +145,26 @@ function attachTargetObjectIdToRequest(name) {
  * @param res
  * @param next
  */
-function attachTargetCompanyToRequest(req, res, next) {
-  if (!req.body || !req.body._company) return res.status(400).send("Bad Request");
-  Company.findById(req.body._company, function (err, company) {
-    if (err) return next(err);
-    if (!company) return res.status(400).send("Bad Request");
-    req.company = company;
-    next();
-  })
+function attachCompanyFromBodyFunction() {
+
+  // if parameter req.company is not already present,
+  // then middleware is returned and tries to set company from body request
+  return conditional(
+    function (req, res, next) {
+      return !!req.body && !req.company;
+    },
+    function (req, res, next) {
+      if (!req.body._company) return res.status(400).send("Bad Request");
+      Company.findById(req.body._company, function (err, company) {
+        if (err) return next(err);
+        if (!company) return res.status(400).send("Bad Request");
+        req.company = company;
+        next();
+      })
+    }
+  );
 }
+var attachCompanyFromBody = attachCompanyFromBodyFunction();
 
 /**
  * Checks if req.user is admin for req.company.
@@ -283,6 +297,7 @@ exports.isPlatformAdmin = isPlatformAdmin;
 exports.getTokenFromQuery = getTokenFromQuery;
 exports.attachUserToRequest = attachUserToRequest;
 exports.jwtMiddleware = jwtMiddleware;
-exports.attachTargetObjectIdToRequest = attachTargetObjectIdToRequest;
-exports.attachTargetCompanyToRequest = attachTargetCompanyToRequest;
+//exports.attachTargetCompanyFromParamToRequest = attachTargetCompanyFromParamToRequest;
+exports.attachCompanyFromBody = attachCompanyFromBody;
 exports.isAdminForTargetCompany = isAdminForTargetCompany;
+exports.attachCompanyFromParam = attachCompanyFromParam;

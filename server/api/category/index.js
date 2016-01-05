@@ -5,40 +5,37 @@ var controller = require('./category.controller');
 
 var router = express.Router();
 
-router.post('/',
+router.param('id', auth.attachCompanyFromParam(Category));
+
+var mdwArray = [
   auth.getTokenFromQuery,
   auth.jwtMiddleware,
   auth.attachUserToRequest,
-  auth.attachTargetCompanyToRequest,
-  auth.isAdminForTargetCompany,
+  auth.attachCompanyFromBody,
+  auth.isAdminForTargetCompany
+];
+
+router.post('/',
+  mdwArray,
   controller.create);
 
 router.put('/:id',
-  auth.getTokenFromQuery,
-  auth.jwtMiddleware,
-  auth.attachUserToRequest,
-  auth.attachTargetCompanyToRequest,
-  auth.isAdminForTargetCompany,
+  mdwArray,
   controller.update);
 
 router.delete('/:id',
-  auth.getTokenFromQuery,
-  auth.jwtMiddleware,
-  auth.attachUserToRequest,
-  auth.attachTargetCompanyToRequest,
-  auth.isAdminForTargetCompany,
+  mdwArray,
   controller.destroy);
 
 router.get('/',
-  auth.getTokenFromQuery,
-  auth.jwtMiddleware,
-  auth.attachUserToRequest,
-  auth.attachTargetCompanyToRequest,
-  auth.isAdminForTargetCompany,
+  mdwArray,
   controller.index);
+//TODO: Qui questa chain di middleware non è adatta: non devo essere amministratore per fare index
 
 //router.post('/issue', controller.issue);
 //router.get('/check', controller.check);
 //router.post('/passwordChange', controller.passwordChange);
+
+errorMiddleware(router);
 
 module.exports = router;

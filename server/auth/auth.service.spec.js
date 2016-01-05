@@ -625,15 +625,18 @@ describe('isAdminForTargetCompany middleware test', function () {
   // set the test routes for this controller method
   before(function () {
     var router = express.Router();
-
-    router.param('id', auth.attachCompanyFromParam(Category));
-
-    router.get('/',
+    var mdwArray = [
       auth.getTokenFromQuery,
       auth.jwtMiddleware,
       auth.attachUserToRequest,
       auth.attachCompanyFromBody,
-      auth.isAdminForTargetCompany,
+      auth.isAdminForTargetCompany
+    ];
+
+    router.param('id', auth.attachCompanyFromParam(Category));
+
+    router.get('/',
+      mdwArray,
       returnReqData('company'));
 
     router.get('/:id',

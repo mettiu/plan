@@ -28,12 +28,18 @@ var companyTemplate = {
   info: "test company info"
 };
 
+var companyTemplateArray = [
+  {name: "test company one", info: "test company one info", purchaseUsers: [], teamUsers: [], adminUsers: []},
+  {name: "test company two", info: "test company one two", purchaseUsers: [], teamUsers: [], adminUsers: []},
+  {name: "test company three", info: "test company one three", purchaseUsers: [], teamUsers: [], adminUsers: []}
+];
+
 var userTemplateArray = [
   {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'},
   {provider: 'local', name: 'Fake User Two', email: 'testtwo@test.com', password: 'passwordtwo'}
 ];
 
-describe('Company controller', function () {
+describe('Company', function () {
 
   // remove all companies from DB to start with a clean environment
   before(function (done) {
@@ -505,5 +511,77 @@ describe('Company controller', function () {
 
   });
 
+  describe('Company - Test method: findByUser', function () {
+
+    var companyArray = _.clone(companyTemplateArray);
+    var userArray = _.clone(userTemplateArray);
+
+    userArray.forEach(function (currentValue, index) {
+      before(function (done) {
+        Company.create(currentValue, function (err, inserted) {
+          if (err) return done(err);
+          userArray[index] = inserted;
+          return done();
+        });
+      });
+    });
+
+    before(function (done) {
+      companyArray[0].purchaseUsers.push(userArray[0]._id);
+      companyArray[0].teamUsers.push(userArray[1]._id);
+      companyArray[1].teamUsers.push(userArray[0]._id);
+      companyArray[2].purchaseUsers.push(userArray[1]._id);
+      done();
+    });
+
+    companyArray.forEach(function (currentValue, index) {
+      before(function (done) {
+        console.log("c: ", index);
+        Company.create(currentValue, function (err, inserted) {
+          if (err) return done(err);
+          companyArray[index] = inserted;
+          return done();
+        });
+      });
+    });
+
+    // remove all companies from DB
+    after(function (done) {
+      utils.mongooseRemoveAll([Company], done);
+    });
+
+    describe('Model test', function () {
+
+      it('should list companies for user 0', function (done) {
+
+        var found;
+
+        Company.findByUser(userArray[0], function (err, list) {
+          if (err) return done(err);
+
+          expect(list.length).to.be.equal(2);
+
+          found = _.find(list, function (company) {
+            console.log("IN ", company);
+            return company._id.toString() === companyArray[0]._id.toString();
+          });
+          expect(found._id.toString()).to.be.equal(companyArray[0]._id.toString());
+
+          found = _.find(list, function (company) {
+            console.log("IN ", company);
+            return company._id.toString() === companyArray[1]._id.toString();
+          });
+          expect(found._id.toString()).to.be.equal(companyArray[1]._id.toString());
+
+          done();
+        });
+      });
+
+    });
+
+  });
+
 });
+
+
 

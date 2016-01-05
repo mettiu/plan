@@ -42,4 +42,24 @@ CompanySchema.plugin(timestamps, {
   updatedAt: 'updatedAt'
 });
 
+/**
+ * Statics
+ */
+CompanySchema
+  .statics = {
+
+  findByUser: function (_user, cb) {
+    this.find(
+      {
+        $or: [
+          {'purchaseUsers': _user},
+          {'teamUsers': _user},
+          {'adminUsers': _user}
+        ]
+      },
+      cb
+    );
+  }
+};
+
 module.exports = mongoose.model('Company', CompanySchema);

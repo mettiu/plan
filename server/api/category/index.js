@@ -5,9 +5,9 @@ var controller = require('./category.controller');
 
 var router = express.Router();
 
-router.param('id', auth.attachCompanyFromParam(Category));
+router.param('CategoryId', auth.attachCompanyFromParam(Category));
 
-var mdwArray = [
+var mdwCategoryAdminArray = [
   auth.getTokenFromQuery,
   auth.jwtMiddleware,
   auth.attachUserToRequest,
@@ -16,19 +16,19 @@ var mdwArray = [
 ];
 
 router.post('/',
-  mdwArray,
+  mdwCategoryAdminArray,
   controller.create);
 
-router.put('/:id',
-  mdwArray,
+router.put('/:CategoryId',
+  mdwCategoryAdminArray,
   controller.update);
 
-router.delete('/:id',
-  mdwArray,
+router.delete('/:CategoryId',
+  mdwCategoryAdminArray,
   controller.destroy);
 
 router.get('/',
-  mdwArray,
+  mdwCategoryAdminArray,
   controller.index);
 //TODO: Qui questa chain di middleware non è adatta: non devo essere amministratore per fare index
 

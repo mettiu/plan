@@ -94,7 +94,6 @@ function attachUserToRequest(req, res, next) {
   });
 }
 
-
 /**
  * Attaches the company to req.
  * Returns a function to user in router.param for those
@@ -111,7 +110,6 @@ function attachCompanyFromParam(model) {
   };
 
   return function (req, res, next, param) {
-    //TODO: create a static method in model definition
     model
       .findById(param)
       .populate('_company')
@@ -122,7 +120,6 @@ function attachCompanyFromParam(model) {
         next();
       });
   }
-
 }
 
 /**

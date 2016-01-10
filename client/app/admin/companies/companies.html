@@ -1,0 +1,23 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h1 class="page-header">Lista Company</h1>
+
+      <div class="container">
+        <p><a href="/new-company">Crea nuova Company</a></p>
+        <ul class="list-group">
+          <li class="list-group-item" ng-repeat="company in CompaniesCtrl.companies | orderBy:'name'">
+            <div class="btn-group pull-right" role="group" aria-label="...">
+              <a ng-click="CompaniesCtrl.editCompany(company)" class="btn btn-primary"><span
+                class="glyphicon glyphicon-edit"></span></a>
+              <a ng-click="CompaniesCtrl.deleteCompany(company)" class="btn btn-danger"><span
+                class="glyphicon glyphicon-trash"></span></a>
+            </div>
+            <strong>{{company.name}}</strong><br>
+            <span class="text-muted">{{company.info}}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

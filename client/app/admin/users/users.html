@@ -1,0 +1,23 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h1 class="page-header">Lista Users</h1>
+
+      <div class="container">
+        <p><a href="/new-user">Crea nuovo User</a></p>
+        <ul class="list-group">
+          <li class="list-group-item" ng-repeat="user in UsersCtrl.users | orderBy:'name'">
+            <div class="btn-group pull-right" role="group" aria-label="...">
+              <a ng-click="UsersCtrl.editUser(user)" class="btn btn-primary"><span
+                class="glyphicon glyphicon-edit"></span></a>
+              <a ng-click="UsersCtrl.deleteUser(user)" class="btn btn-danger"><span
+                class="glyphicon glyphicon-trash"></span></a>
+            </div>
+            {{user.email}} - <strong>{{user.name}}</strong><br>
+            <span class="text-muted">{{user.name}}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

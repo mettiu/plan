@@ -29,7 +29,7 @@ var companyTemplate = {
 };
 
 var companyTemplateArray = [
-  {name: "test company one", info: "test company one info", purchaseUsers: [], teamUsers: [], adminUsers: []},
+  {name: "test company one", info: "test company one info", purchaseUsers: [], teamUsers: [], adminUsers: [], active: false},
   {name: "test company two", info: "test company one two", purchaseUsers: [], teamUsers: [], adminUsers: []},
   {name: "test company three", info: "test company one three", purchaseUsers: [], teamUsers: [], adminUsers: []}
 ];
@@ -41,13 +41,18 @@ var userTemplateArray = [
 
 describe('Company', function () {
 
-  // remove all companies from DB to start with a clean environment
+  // remove all Company, User from DB to start with a clean environment
   before(function (done) {
-    utils.mongooseRemoveAll([Company], done);
+    utils.mongooseRemoveAll([Company, User], done);
   });
 
   // set the test routes for this controller method
   before(mountMiddleware);
+
+  // remove all Company, User from DB to start with a clean environment
+  after(function (done) {
+    utils.mongooseRemoveAll([Company, User], done);
+  });
 
   describe('Company - Test method: create', function () {
 
@@ -518,7 +523,7 @@ describe('Company', function () {
 
     userArray.forEach(function (currentValue, index) {
       before(function (done) {
-        Company.create(currentValue, function (err, inserted) {
+        User.create(currentValue, function (err, inserted) {
           if (err) return done(err);
           userArray[index] = inserted;
           return done();
@@ -526,17 +531,18 @@ describe('Company', function () {
       });
     });
 
+    //set user/company data
     before(function (done) {
       companyArray[0].purchaseUsers.push(userArray[0]._id);
       companyArray[0].teamUsers.push(userArray[1]._id);
       companyArray[1].teamUsers.push(userArray[0]._id);
       companyArray[2].purchaseUsers.push(userArray[1]._id);
+      companyArray[2].adminUsers.push(userArray[1]._id);
       done();
     });
 
     companyArray.forEach(function (currentValue, index) {
       before(function (done) {
-        console.log("c: ", index);
         Company.create(currentValue, function (err, inserted) {
           if (err) return done(err);
           companyArray[index] = inserted;
@@ -545,33 +551,134 @@ describe('Company', function () {
       });
     });
 
-    // remove all companies from DB
+    // remove all Company, User from DB
     after(function (done) {
-      utils.mongooseRemoveAll([Company], done);
+      utils.mongooseRemoveAll([Company, User], done);
     });
 
     describe('Model test', function () {
 
-      it('should list companies for user 0', function (done) {
+      it('should list companies for user 0 (no options parameter)', function (done) {
 
-        var found;
+        var options = {
+          admin: false,
+          team: true,
+          purchase: true,
+          onlyActive: null
+        };
 
-        Company.findByUser(userArray[0], function (err, list) {
+        Company.findByUser(userArray[0]._id, null, function (err, list) {
+          if (err) return done(err);
+
+          expect(list.length).to.be.equal(1);
+
+          done();
+        });
+      });
+
+      it('should list companies for user 0 (set options parameter - all false)', function (done) {
+
+        var options = {
+          admin: false,
+          team: false,
+          purchase: false,
+          active: null
+        };
+
+        Company.findByUser(userArray[0]._id, options, function (err, list) {
+          if (err) return done(err);
+
+          expect(list.length).to.be.equal(0);
+
+          done();
+        });
+      });
+
+      it('should list companies for user 0 (set options parameter - all true)', function (done) {
+
+        var options = {
+          admin: true,
+          team: true,
+          purchase: true,
+          onlyActive: null
+        };
+
+        Company.findByUser(userArray[0]._id, options, function (err, list) {
+          if (err) return done(err);
+
+          expect(list.length).to.be.equal(1);
+
+          done();
+        });
+      });
+
+      it('should list companies for user 0 (set options parameter - all true, even inactive)', function (done) {
+
+        var options = {
+          admin: true,
+          team: true,
+          purchase: true,
+          onlyActive: false
+        };
+
+        Company.findByUser(userArray[0]._id, options, function (err, list) {
           if (err) return done(err);
 
           expect(list.length).to.be.equal(2);
 
-          found = _.find(list, function (company) {
-            console.log("IN ", company);
-            return company._id.toString() === companyArray[0]._id.toString();
-          });
-          expect(found._id.toString()).to.be.equal(companyArray[0]._id.toString());
+          done();
+        });
+      });
 
-          found = _.find(list, function (company) {
-            console.log("IN ", company);
-            return company._id.toString() === companyArray[1]._id.toString();
-          });
-          expect(found._id.toString()).to.be.equal(companyArray[1]._id.toString());
+      it('should list companies for user 1 (set options parameter - not admin)', function (done) {
+
+        var options = {
+          admin: false,
+          team: true,
+          purchase: true,
+          onlyActive: null
+        };
+
+        Company.findByUser(userArray[1]._id, options, function (err, list) {
+          if (err) return done(err);
+
+          expect(list.length).to.be.equal(1);
+
+          done();
+        });
+      });
+
+      it('should list companies for user 1 (set options parameter - all true, even inactive)', function (done) {
+
+        var options = {
+          admin: true,
+          team: true,
+          purchase: true,
+          onlyActive: false
+        };
+
+        Company.findByUser(userArray[1]._id, options, function (err, list) {
+          if (err) return done(err);
+
+          expect(list.length).to.be.equal(2);
+
+          done();
+        });
+      });
+
+      it('should list companies for user 1 (set options parameter - only admin)', function (done) {
+
+        var options = {
+          admin: true,
+          team: false,
+          purchase: false,
+          onlyActive: true
+        };
+
+        Company.findByUser(userArray[1]._id, options, function (err, list) {
+          if (err) return done(err);
+
+          expect(list.length).to.be.equal(1);
 
           done();
         });

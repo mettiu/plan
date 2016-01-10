@@ -6,47 +6,48 @@ var crypto = require('crypto');
 var _ = require('lodash');
 var authTypes = ['github', 'twitter', 'facebook', 'google'];
 var Category = require('../category/category.model');
+var Company = require('../company/company.model');
 var Team = require('../team/team.model');
 
-var SupplyCategoriesSchema = new Schema({
-  _company: {
-    type: Schema.Types.ObjectId,
-    ref: 'Company',
-    required: true
-  },
-  _category: {
-    type: Schema.Types.ObjectId,
-    ref: 'Category',
-    required: true
-  }
-});
+//var SupplyCategoriesSchema = new Schema({
+//  _company: {
+//    type: Schema.Types.ObjectId,
+//    ref: 'Company',
+//    required: true
+//  },
+//  _category: {
+//    type: Schema.Types.ObjectId,
+//    ref: 'Category',
+//    required: true
+//  }
+//});
 
-var TeamSchema = new Schema({
-  _company: {
-    type: Schema.Types.ObjectId,
-    ref: 'Company',
-    required: true
-  },
-  _team: {
-    type: Schema.Types.ObjectId,
-    ref: 'Team',
-    required: true
-  }
-});
+//var TeamSchema = new Schema({
+//  _company: {
+//    type: Schema.Types.ObjectId,
+//    ref: 'Company',
+//    required: true
+//  },
+//  _team: {
+//    type: Schema.Types.ObjectId,
+//    ref: 'Team',
+//    required: true
+//  }
+//});
 
 var UserSchema = new Schema({
   name: String,
   email: {type: String, lowercase: true},
-  _companies: [{ // companies that the user is allower to work for
-    type: Schema.Types.ObjectId,
-    ref: 'Company'
-  }],
-  _adminCompanies: [{ // companies that the user is admin for
-    type: Schema.Types.ObjectId,
-    ref: 'Company'
-  }],
-  teams: [ TeamSchema ], // teams that the user is member of
-  supplyCategories: [ SupplyCategoriesSchema ], // supply categories that the user is allowed to work for
+  //_companies: [{ // companies that the user is allower to work for
+  //  type: Schema.Types.ObjectId,
+  //  ref: 'Company'
+  //}],
+  //_adminCompanies: [{ // companies that the user is admin for
+  //  type: Schema.Types.ObjectId,
+  //  ref: 'Company'
+  //}],
+  //teams: [ TeamSchema ], // teams that the user is member of
+  //supplyCategories: [ SupplyCategoriesSchema ], // supply categories that the user is allowed to work for
   hashedPassword: String,
   provider: String,
   salt: String,
@@ -93,6 +94,7 @@ UserSchema
     };
   });
 
+
 /**
  * Validations
  */
@@ -128,64 +130,64 @@ UserSchema
     });
   }, 'The specified email address is already in use.');
 
-// Validate supplyCategories
-UserSchema
-  .path('supplyCategories')
-  .validate(function (supplyCategoriesArray, respond) {
-    validateCategoriesOrTeams(supplyCategoriesArray, respond, ['_company', '_category'], this, Category);
-  }, 'The specified supply categories are not valid.');
+//// Validate supplyCategories
+//UserSchema
+//  .path('supplyCategories')
+//  .validate(function (supplyCategoriesArray, respond) {
+//    validateCategoriesOrTeams(supplyCategoriesArray, respond, ['_company', '_category'], this, Category);
+//  }, 'The specified supply categories are not valid.');
 
-// Validate Teams
-// checks if user can work for ALL the companies listed and
-// checks if category/team exists for that company
-UserSchema
-  .path('teams')
-  .validate(function (teamsArray, respond) {
-    validateCategoriesOrTeams(teamsArray, respond, ['_company', '_team'], this, Team);
-  }, 'The specified teams are not valid.');
+//// Validate Teams
+//// checks if user can work for ALL the companies listed and
+//// checks if category/team exists for that company
+//UserSchema
+//  .path('teams')
+//  .validate(function (teamsArray, respond) {
+//    validateCategoriesOrTeams(teamsArray, respond, ['_company', '_team'], this, Team);
+//  }, 'The specified teams are not valid.');
 
-// fieldArray should contain the name of the fields of supplyCategory or Team.
-// the order matters! first is company id field, second is team/category id field!!
-function validateCategoriesOrTeams (validationArray, respond, fieldArray, selfDocument, obj) {
-
-  // nothing to do...
-  if (!validationArray.length) return respond(true);
-
-  // otherwise, let's work!
-  removeDuplicates(validationArray, fieldArray);
-
-  // convert validation array into an array of strings representing the _company ids
-  // getting the list of companies involved for which user have al least one category
-  var accessibleElementsForCompany = [];
-  validationArray.forEach(function(element){
-    accessibleElementsForCompany.push(element._company.toString());
-  });
-  accessibleElementsForCompany = _.uniq(accessibleElementsForCompany);
-
-  // extract from user the array of _company ids for which the user is allowed to work for
-  var _companiesStringArray = [];
-  selfDocument._doc._companies.forEach(function(value) {
-    _companiesStringArray.push(value.toString());
-  });
-
-  // get intersection between these arrays of companies
-  var intersection = _.intersection(accessibleElementsForCompany, _companiesStringArray);
-  // Supply categories (or teams) set should be contained into company list set:
-  // so intesection should be equal to supply categories set. Otherwise, there is a category/company (or team/company)
-  // whose company is not allowed for user
-  if (intersection.length !== accessibleElementsForCompany.length) return respond(false);
-
-  // now let's check if the categories (or teams) exist and are linked to user's companies
-  var expressionArray = [];
-  validationArray.forEach(function(element) {
-    expressionArray.push({'_id': element[fieldArray[1]], '_company': element[fieldArray[0]]});
-  });
-  obj.count({$or: expressionArray}, function (err, count) {
-    if (err) return respond(false);
-    if (count < validationArray.length) return respond(false);
-    return respond(true);
-  });
-}
+//// fieldArray should contain the name of the fields of supplyCategory or Team.
+//// the order matters! first is company id field, second is team/category id field!!
+//function validateCategoriesOrTeams (validationArray, respond, fieldArray, selfDocument, obj) {
+//
+//  // nothing to do...
+//  if (!validationArray.length) return respond(true);
+//
+//  // otherwise, let's work!
+//  removeDuplicates(validationArray, fieldArray);
+//
+//  // convert validation array into an array of strings representing the _company ids
+//  // getting the list of companies involved for which user have al least one category
+//  var accessibleElementsForCompany = [];
+//  validationArray.forEach(function(element){
+//    accessibleElementsForCompany.push(element._company.toString());
+//  });
+//  accessibleElementsForCompany = _.uniq(accessibleElementsForCompany);
+//
+//  // extract from user the array of _company ids for which the user is allowed to work for
+//  var _companiesStringArray = [];
+//  selfDocument._doc._companies.forEach(function(value) {
+//    _companiesStringArray.push(value.toString());
+//  });
+//
+//  // get intersection between these arrays of companies
+//  var intersection = _.intersection(accessibleElementsForCompany, _companiesStringArray);
+//  // Supply categories (or teams) set should be contained into company list set:
+//  // so intesection should be equal to supply categories set. Otherwise, there is a category/company (or team/company)
+//  // whose company is not allowed for user
+//  if (intersection.length !== accessibleElementsForCompany.length) return respond(false);
+//
+//  // now let's check if the categories (or teams) exist and are linked to user's companies
+//  var expressionArray = [];
+//  validationArray.forEach(function(element) {
+//    expressionArray.push({'_id': element[fieldArray[1]], '_company': element[fieldArray[0]]});
+//  });
+//  obj.count({$or: expressionArray}, function (err, count) {
+//    if (err) return respond(false);
+//    if (count < validationArray.length) return respond(false);
+//    return respond(true);
+//  });
+//}
 
 var validatePresenceOf = function (value) {
   return value && value.length;
@@ -213,11 +215,13 @@ UserSchema
   findByEmail: function (email, cb) {
     var xxx = this.findOne({email: email}, cb);
     return xxx;
-  },
-
-  createNew: function (model, callback) {
-    (new this(model)).save(callback);
   }
+
+  //createNew: function (model, callback) {
+  //  (new this(model)).save(callback);
+  //}
+
+
 };
 
 /**
@@ -258,59 +262,71 @@ UserSchema.methods = {
     return crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64');
   },
 
-  addUserCategory: function (categoryId, callback) {
-    // TODO: check if category exists!
-    this.categories.push(categoryId);
-    if (callback) this.save(callback);
-  },
+  //addUserCategory: function (categoryId, callback) {
+  //  // TODO: check if category exists!
+  //  this.categories.push(categoryId);
+  //  if (callback) this.save(callback);
+  //},
 
-  removeUserCategory: function (categoryId) {
-    var removed = _.remove(this.categories, function (catId) {
-      return catId.toString() === categoryId.toString();
-    });
-    if (callback) this.save(callback);
-  },
+  //removeUserCategory: function (categoryId) {
+  //  var removed = _.remove(this.categories, function (catId) {
+  //    return catId.toString() === categoryId.toString();
+  //  });
+  //  if (callback) this.save(callback);
+  //},
 
-  addSupplyCategoryForCompany: function (supplyCategoryId, companyId) {
-    console.log("Aggiungo!");
-    return true;
+  //addSupplyCategoryForCompany: function (supplyCategoryId, companyId) {
+  //  console.log("Aggiungo!");
+  //  return true;
+  //}
+
+  /**
+   * Find the array of companies  this user can access to.
+   * Options is an object with those booleans:
+   * - admin: (default true) look into company's adminUsers array
+   * - team: (default true) look into company's teamUsers array
+   * - purchase: (default true) look into company's purchaseUsers array
+   * - onlyActive: (default true) include even non active companies
+   * @param options {object} options
+   * @param cb {function} to call with (err, resultList) parameters
+   */
+  findCompanies: function(options, cb) {
+    Company.findByUser(this._id, options, cb);
   }
-
 
 };
 
-function checkAcl(acl) {
-  return !!(typeof acl === 'object' && acl.hasOwnProperty('_company') && acl.hasOwnProperty('role'));
+//function checkAcl(acl) {
+//  return !!(typeof acl === 'object' && acl.hasOwnProperty('_company') && acl.hasOwnProperty('role'));
+//
+//}
 
-}
-
-// TODO: bring this to a service module
-/**
- * Takes an array of objects and removes from it all the duplicates entries. The objects in the array
- * must have one only level of fields. So this function works only with arrays of objects, where these
- * objects only contain basic types (i.e: strings, numbers, etc.) which return always the same string
- * when casted to string. All the objects in the array must have the same structure and the fields must
- * be listed in fieldArray parameter.
- *
- * @param arr The array containinng duplicated that should be removed
- * @param fieldArray List of the array objects field names
- */
-function removeDuplicates(arr, fieldArray) {
-  // save a copy of the array and uniq the copy into a temp variable
-  var temp = _.uniq(_.clone(arr), function (item) {
-    var returnString = '';
-    fieldArray.forEach(function (element) {
-      returnString += item[element];
-    });
-    return returnString;
-  });
-  //empty the original array
-  arr.splice(0, arr.length);
-  temp.forEach(function(currentValue) {
-    arr.push(currentValue);
-  });
-  // if we don't do in this way, all the references to the array (user in other parts of mongoose framework)
-  // does not point to the new array. Array substitution creates a new variable and the other references are lost!
-}
+///**
+// * Takes an array of objects and removes from it all the duplicates entries. The objects in the array
+// * must have one only level of fields. So this function works only with arrays of objects, where these
+// * objects only contain basic types (i.e: strings, numbers, etc.) which return always the same string
+// * when casted to string. All the objects in the array must have the same structure and the fields must
+// * be listed in fieldArray parameter.
+// *
+// * @param arr The array containinng duplicated that should be removed
+// * @param fieldArray List of the array objects field names
+// */
+//function removeDuplicates(arr, fieldArray) {
+//  // save a copy of the array and uniq the copy into a temp variable
+//  var temp = _.uniq(_.clone(arr), function (item) {
+//    var returnString = '';
+//    fieldArray.forEach(function (element) {
+//      returnString += item[element];
+//    });
+//    return returnString;
+//  });
+//  //empty the original array
+//  arr.splice(0, arr.length);
+//  temp.forEach(function(currentValue) {
+//    arr.push(currentValue);
+//  });
+//  // if we don't do in this way, all the references to the array (user in other parts of mongoose framework)
+//  // does not point to the new array. Array substitution creates a new variable and the other references are lost!
+//}
 
 module.exports = mongoose.model('User', UserSchema);

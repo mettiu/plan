@@ -51,7 +51,7 @@ module.exports = function (app) {
   function castError(err, req, res, next) {
     if (err.name !== 'CastError') return next(err);
     //TODO: check if something less than the whole error should be sent to client
-    return res.status(404).send("Not Found");
+    return res.status(404).json(err);
   }
 
   /**

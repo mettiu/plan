@@ -104,11 +104,14 @@ function attachUserToRequest(req, res, next) {
  * @returns {Function} to be used in router.param call
  */
 function attachCompanyFromParam(model) {
+  // TODO: this function gats called before user auth validation. Check user before sending any info, including a 404 if id is 'fake id'!
+  // with a unexistant objectId id, !found is fired;
+  // with a string id, we get a Mongoose CastError, which becones a 404
+
   // if mandatory model parameter is not set returns a middleware that crashes!
   if (!model) return function (res, req, next) {
-    return next(new Error("Missing Model parameter!"))
+    return next(new Error("Missing model from function call!"))
   };
-
   return function (req, res, next, param) {
     model
       .findById(param)

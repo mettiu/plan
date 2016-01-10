@@ -1,7 +1,10 @@
 'use strict';
 
-var express = require('express');
-var controller = require('./category.controller');
+var express = require('express'),
+  controller = require('./category.controller'),
+  Category = require('./category.model'),
+  auth = require('../../auth/auth.service'),
+  errorMiddleware = require('../../components/error-middleware');
 
 var router = express.Router();
 
@@ -15,22 +18,29 @@ var mdwCategoryAdminArray = [
   auth.isAdminForTargetCompany
 ];
 
+var mdwUserArray = [
+  auth.getTokenFromQuery,
+  auth.jwtMiddleware,
+  auth.attachUserToRequest
+];
+
 router.post('/',
   mdwCategoryAdminArray,
   controller.create);
-
-router.put('/:CategoryId',
-  mdwCategoryAdminArray,
-  controller.update);
 
 router.delete('/:CategoryId',
   mdwCategoryAdminArray,
   controller.destroy);
 
-router.get('/',
+router.put('/:CategoryId',
   mdwCategoryAdminArray,
+  controller.update);
+
+router.get('/',
+  mdwUserArray,
+  controller.optionsMdw,
   controller.index);
-//TODO: Qui questa chain di middleware non è adatta: non devo essere amministratore per fare index
+//TODO: index dovrebbe restituire solo le category delle mie company
 
 //router.post('/issue', controller.issue);
 //router.get('/check', controller.check);

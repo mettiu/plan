@@ -2,6 +2,7 @@
 
 var _ = require('lodash');
 var Category = require('./category.model');
+var Company = require('../company/company.model');
 
 /**
  * Creates new category in DB.
@@ -20,7 +21,9 @@ exports.create = function (req, res, next) {
 };
 
 /**
- * List categories. Accepts optional parameter req.body.active <boolean> to match only active
+ * List categories belonging to companies user has access to (as a purchaseUser,
+ * as a TeamUser or as an adminUser).
+ * Accepts optional parameter req.query.onlyActive <boolean> to match only active
  * or inactive companies.
  * In case of success returns http code 200 with the array of companies found.
  * @param req
@@ -28,16 +31,22 @@ exports.create = function (req, res, next) {
  * @param next
  */
 exports.index = function (req, res, next) {
-  var query = {};
-  if (req.body.active !== undefined && typeof(req.body.active) === "boolean")
-    query.active = req.body.active;
-  Category.find(query, function (err, categories) {
-    if (err) {
-      return next(err);
-    }
-    return res.status(200).json(categories);
+
+  // TODO: add a second querystring parameter to fllter only categories from one company
+
+  req.user.findCompanies(req.options, function(err, companyList) {
+    if (err) return next(err);
+    if (companyList.length === 0) return res.status(200).json([]);
+    Category.findByCompanies(companyList, req.options, function(err, categoryList) {
+      if (err) return next(err);
+      return res.status(200).json(categoryList);
+    })
   });
+
 };
+
+
+
 
 /**
  * List active categories, filtering by category name. Category name is got from query 'value' parameter.
@@ -122,7 +131,8 @@ exports.update = function (req, res, next) {
  * @param next
  */
 exports.destroy = function (req, res, next) {
-  Category.findById(req.params.id, function (err, category) {
+  // TODO: this query could be unecessary: already done in attachCompanyFromParam middleware!
+  Category.findById(req.params.CategoryId, function (err, category) {
     if (err) {
       return next(err);
     }
@@ -136,4 +146,29 @@ exports.destroy = function (req, res, next) {
       return res.status(204).send('No Content');
     });
   });
+};
+
+/**
+ * Gets some options parameters from querystring and brings to a
+ * req.options object.
+ * Options is an object with those booleans:
+ * - admin: (default true) look into company's adminUsers array
+ * - team: (default true) look into company's teamUsers array
+ * - purchase: (default true) look into company's purchaseUsers array
+ * - onlyActive: (default true) include even non active companies
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.optionsMdw = function(req, res, next) {
+  var options = {};
+  req.query.onlyActive === 'true' ? options.onlyActive = true : options.onlyActive = false;
+
+  options.onlyActive = !(req.query.onlyActive === 'false');
+  options.team = !(req.query.team === 'false');
+  options.purchase = !(req.query.purchase === 'false');
+  options.admin = !(req.query.admin === 'false');
+
+  req.options = options;
+  next();
 };

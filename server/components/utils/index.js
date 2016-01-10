@@ -1,6 +1,8 @@
 'use strict';
 
-var async = require('async');
+var async = require('async'),
+  app = require('../../app'),
+  request = require('supertest');
 
 /**
  * Accepts an array of Monggoose models and empties the corresponding collections from the DB with a remove() call.
@@ -44,4 +46,25 @@ exports.mongooseCreate = function (model, documentsToCreate, callback) {
   //    if (err) return callback(err);
   //    return callback();
   //  });
+};
+
+/**
+ * Logs user with supplied email and password, then callback is called
+ * with parameters
+ * - err
+ * - res
+ * @param {string} email
+ * @param {string} password
+ * @param {function} callback
+ */
+exports.restLogin = function (email, password, callback) {
+  request(app)
+    .post('/auth/local')
+    .send({email: email, password: password})
+    .expect(200)
+    .expect('Content-Type', /json/)
+    .end(function (err, res) {
+      if (err) return callback(err);
+      callback(null, res);
+    });
 };

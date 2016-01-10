@@ -48,17 +48,41 @@ CompanySchema.plugin(timestamps, {
 CompanySchema
   .statics = {
 
-  findByUser: function (_user, cb) {
-    this.find(
-      {
-        $or: [
-          {'purchaseUsers': _user},
-          {'teamUsers': _user},
-          {'adminUsers': _user}
-        ]
-      },
-      cb
-    );
+  /**
+   * Find the array of companies _user can access to.
+   * Options is an object with those booleans:
+   * - admin: (default true) look into company's adminUsers array
+   * - team: (default true) look into company's teamUsers array
+   * - purchase: (default true) look into company's purchaseUsers array
+   * - onlyActive: (default true) include even non active companies
+   * @param _user {object} user id to look for
+   * @param options {object} options
+   * @param cb {function} to call with (err, resultList) parameters
+   */
+  findByUser: function (_user, options, cb) {
+    var defaultOptions = {
+      admin: true,
+      team: true,
+      purchase: true,
+      onlyActive: null
+    };
+
+    if (!options) options = defaultOptions;
+    if(!options.admin && !options.team && !options.purchase)
+      return cb(null, []);
+    if (options.admin) options.admin = !!options.admin;
+    if (options.team) options.team = !!options.team;
+    if (options.purcase) options.purcase = !!options.purcase;
+
+    var query = { $or: [] };
+    if (options.admin) query.$or.push({'adminUsers': _user});
+    if (options.team) query.$or.push({'teamUsers': _user});
+    if (options.purchase) query.$or.push({'purchaseUsers': _user});
+
+    var searchOnlyActive = true;
+    if (typeof options.onlyActive === 'boolean' && !options.onlyActive) searchOnlyActive = false;
+    if (searchOnlyActive) query.active = true;
+    this.find(query, cb);
   }
 };
 

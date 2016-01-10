@@ -13,6 +13,7 @@ module.exports = function(app) {
 
   // Insert routes below
   app.use('/api/companies', require('./api/company'));
+  app.use('/api/categories', require('./api/category'));
   app.use('/api/features', require('./api/feature'));
   app.use('/api/things', require('./api/thing'));
   app.use('/api/users', require('./api/user'));

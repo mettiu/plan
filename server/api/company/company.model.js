@@ -1,6 +1,7 @@
 'use strict';
 
-// develop comment
+// test comment
+// merged by me
 
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;

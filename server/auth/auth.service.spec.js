@@ -19,7 +19,7 @@ var
   Category = require('../api/category/category.model');
 
 var userTemplate = {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'};
-var companyTemplate = {name: "test company", info: "test company info", adminUsers: []};
+var companyTemplate = {name: "test company", info: "test company info", adminUsers: [], teamUsers: [], purchaseUsers: []};
 var categoryTemplate = {name: "test category", description: "test category description"};
 var userTemplateArray = [
   {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'},
@@ -648,7 +648,7 @@ describe('isAdminForTargetCompany middleware test', function () {
       returnReqData('company'));
 
     app.use(testPath, router);
-    app.use(testPath, router);
+//    app.use(testPath, router);
     errorMiddleware(router);
   });
 
@@ -671,6 +671,254 @@ describe('isAdminForTargetCompany middleware test', function () {
     company = _.clone(companyTemplate);
     userArray.forEach(function (user, i) {
       if (i <= 1) company.adminUsers.push(user._id); // insert only 2 on 3 users as admin
+    });
+    Company.create(company, function (err, created) {
+      if (err) return done(err);
+      company = created;
+      return done();
+    });
+  });
+
+  // set category test data
+  before(function (done) {
+    category = _.clone(categoryTemplate);
+    category._company = company._id;
+
+    Category.create(category, function (err, inserted) {
+      if (err) return done(err);
+      category = inserted;
+      localCategory = _.clone(category._doc);
+      localCategory._company = mongoose.Types.ObjectId(); // change id to be sure it's not taken from here!
+      return done();
+    });
+  });
+
+  // remove all User, Company, Category from DB
+  after(function (done) {
+    utils.mongooseRemoveAll([User, Company, Category], done);
+  });
+
+  describe('test with 1st authorized user', function () {
+
+    var authToken;
+
+    // login user
+    before(function (done) {
+
+      user = userArray[0];
+
+      restLogin(user.email, user.password, function (err, res) {
+        if (err) return done(err);
+        expect(res.body).to.be.instanceOf(Object);
+        expect(res.body).to.have.property('token');
+        jsonwebtoken.verify(res.body.token, config.secrets.session, function (err, decoded) {
+          if (err) return done(err);
+          expect(decoded._id).to.be.equal('' + user._id);
+          authToken = res.body.token;
+          return done();
+        });
+      });
+    });
+
+    it('should authorize / path', function (done) {
+      request(app)
+        .get(testPath)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(category)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.have.property('_id', company._id.toString());
+          expect(res.body).to.have.property('name', company.name);
+          expect(res.body).to.have.property('info', company.info);
+          return done();
+        });
+    });
+
+    it('should authorize /:id path', function (done) {
+      request(app)
+        .get(testPath + '/' + category._id)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(localCategory)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.have.property('_id', company._id.toString());
+          expect(res.body).to.have.property('name', company.name);
+          expect(res.body).to.have.property('info', company.info);
+          return done();
+        });
+    });
+
+  });
+
+  describe('test with 2nd authorized user', function () {
+
+    var authToken;
+
+    // login user
+    before(function (done) {
+
+      user = userArray[1];
+
+      restLogin(user.email, user.password, function (err, res) {
+        if (err) return done(err);
+        expect(res.body).to.be.instanceOf(Object);
+        expect(res.body).to.have.property('token');
+        jsonwebtoken.verify(res.body.token, config.secrets.session, function (err, decoded) {
+          if (err) return done(err);
+          expect(decoded._id).to.be.equal('' + user._id);
+          authToken = res.body.token;
+          return done();
+        });
+      });
+    });
+
+    it('should authorize / path', function (done) {
+      request(app)
+        .get(testPath)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(category)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.have.property('_id', company._id.toString());
+          expect(res.body).to.have.property('name', company.name);
+          expect(res.body).to.have.property('info', company.info);
+          return done();
+        });
+    });
+
+    it('should authorize /:id path', function (done) {
+      request(app)
+        .get(testPath + '/' + category._id)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(localCategory)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.have.property('_id', company._id.toString());
+          expect(res.body).to.have.property('name', company.name);
+          expect(res.body).to.have.property('info', company.info);
+          return done();
+        });
+    });
+
+  });
+
+  describe('test with 3rd authorized user', function () {
+
+    var authToken;
+
+    // login user
+    before(function (done) {
+
+      user = userArray[2];
+
+      restLogin(user.email, user.password, function (err, res) {
+        if (err) return done(err);
+        expect(res.body).to.be.instanceOf(Object);
+        expect(res.body).to.have.property('token');
+        jsonwebtoken.verify(res.body.token, config.secrets.session, function (err, decoded) {
+          if (err) return done(err);
+          expect(decoded._id).to.be.equal('' + user._id);
+          authToken = res.body.token;
+          return done();
+        });
+      });
+    });
+
+    it('should NOT authorize / path', function (done) {
+      request(app)
+        .get(testPath)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(category)
+        .expect(401)
+        //.expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          return done();
+        });
+    });
+
+    it('should authorize /:id path', function (done) {
+      request(app)
+        .get(testPath + '/' + category._id)
+        .set('authorization', 'Bearer ' + authToken)
+        .send(localCategory)
+        .expect(401)
+        //.expect('Content-Type', /json/)
+        .end(function (err, res) {
+          if (err) return done(err);
+          return done();
+        });
+    });
+
+  });
+
+});
+
+/**
+ * Test isAllowedForTargetCompany middleware
+ */
+describe('isAllowedForTargetCompany middleware test', function () {
+
+  var testPath = '/test/auth/isAllowedForTargetCompany';
+  var userArray;
+  var company;
+  var category;
+  var localCategory;
+  var user;
+
+  // set the test routes for this controller method
+  before(function () {
+    var router = express.Router();
+    var mdwArray = [
+      auth.getTokenFromQuery,
+      auth.jwtMiddleware,
+      auth.attachUserToRequest,
+      auth.attachCompanyFromBody,
+      auth.isAllowedForTargetCompany
+    ];
+
+    router.param('id', auth.attachCompanyFromParam(Category));
+
+    router.get('/',
+      mdwArray,
+      returnReqData('company'));
+
+    router.get('/:id',
+      mdwArray,
+      returnReqData('company'));
+
+    app.use(testPath, router);
+    errorMiddleware(router);
+  });
+
+  // set users test data
+  before(function (done) {
+    userArray = _.clone(userTemplateArray);
+
+    User.create(userArray, function (err, insertedArray) {
+      if (err) return done(err);
+      insertedArray.forEach(function (item, i) {
+        userArray[i] = item;
+      });
+      return done();
+    });
+
+  });
+
+  // create the company needed for category tests
+  before(function (done) {
+    company = _.clone(companyTemplate);
+    userArray.forEach(function (user, i) {
+      if (i === 0) company.teamUsers.push(user._id); // insert only 2 on 3 users as admin
+      if (i === 1) company.purchaseUsers.push(user._id); // insert only 2 on 3 users as admin
     });
     Company.create(company, function (err, created) {
       if (err) return done(err);

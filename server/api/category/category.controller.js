@@ -75,7 +75,7 @@ exports.find = function (req, res, next) {
  * @param next
  */
 exports.show = function (req, res, next) {
-  Category.findById(req.params.id, function (err, category) {
+  Category.findById(req.params.CategoryId, function (err, category) {
     if (err) {
       return next(err);
     }

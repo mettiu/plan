@@ -16,11 +16,6 @@ var express = require('express'),
   utils = require('../../components/utils'),
   errorMiddleware = require('../../components/error-middleware');
 
-//var categoryTemplate = {
-//  name: "test category",
-//  description: "test category description"
-//};
-
 var categoryTemplateArray = [
   {name: "test category", description: "test category description", active: true},
   {name: "flower category", description: "flower category description", active: true},
@@ -28,11 +23,6 @@ var categoryTemplateArray = [
 ];
 
 var categoryTemplate = _.clone(categoryTemplateArray[0]);
-
-//var companyTemplate = {
-//  name: "test company",
-//  info: "test company info"
-//};
 
 var companyTemplateArray = [
   {name: "test company", info: "test company info", purchaseUsers: [], teamUsers: [], adminUsers: []},
@@ -129,18 +119,6 @@ describe('Category', function () {
     user = userArray[1];
     done();
   });
-
-  //// create the company needed for category tests
-  //before(function (done) {
-  //  company = _.clone(companyTemplate);
-  //  Company.create(company, function (err, created) {
-  //    if (err) return done(err);
-  //    company = created;
-  //    return done();
-  //  });
-  //});
-
-  //before()
 
   // remove all Category, Company, User from DB
   after(function (done) {
@@ -386,93 +364,177 @@ describe('Category', function () {
 
   });
 
-  // TODO: completare questi test ed i relativi metodi     <--------------------<<<<
-  //describe('Category - Test method: show', function () {
-  //
-  //  var category;
-  //
-  //  // set category test data
-  //  before(function (done) {
-  //    category = _.clone(categoryTemplate);
-  //    category._company = company._id;
-  //
-  //    Category.create(category, function (err, inserted) {
-  //      if (err) return done(err);
-  //      category = inserted;
-  //      return done();
-  //    });
-  //
-  //  });
-  //
-  //  // remove all categories from DB
-  //  after(function (done) {
-  //    utils.mongooseRemoveAll([Category], done);
-  //  });
-  //
-  //  describe('Model test', function () {
-  //
-  //    it('should find the category', function (done) {
-  //      Category.findById(category._id, function (err, found) {
-  //        if (err) return done(err);
-  //        expect(found).to.be.an.instanceOf(Category);
-  //        return done();
-  //      });
-  //    });
-  //
-  //    it('should not find the category', function (done) {
-  //      Category.findById(mongoose.Types.ObjectId(), function (err, found) {
-  //        if (err) return done(err);
-  //        expect(found).to.be.null;
-  //        return done();
-  //      });
-  //    });
-  //
-  //  });
-  //
-  //  describe('Controller test', function () {
-  //
-  //    it('should find the category', function (done) {
-  //      request(app)
-  //        .get('/test/categories/' + category._id)
-  //        .send()
-  //        .expect(200)
-  //        .expect('Content-Type', /json/)
-  //        .end(function (err, res) {
-  //          if (err) return done(err);
-  //          expect(res.body).to.be.instanceof(Object);
-  //          expect(res.body._id.toString()).to.be.equal(category._id.toString());
-  //          return done();
-  //        });
-  //    });
-  //
-  //    it('should not find the category by a fake id', function (done) {
-  //      request(app)
-  //        .get('/test/categories/your id here')
-  //        .send()
-  //        .expect(404)
-  //        //.expect('Content-Type', /json/)
-  //        .end(function (err, res) {
-  //          if (err) return done(err);
-  //          return done();
-  //        });
-  //    });
-  //
-  //    it('should not find the category by a fake id, even if well formatted', function (done) {
-  //      request(app)
-  //        .get('/test/categories/' + mongoose.Types.ObjectId())
-  //        .send()
-  //        .expect(404)
-  //        //.expect('Content-Type', /json/)
-  //        .end(function (err, res) {
-  //          if (err) return done(err);
-  //          return done();
-  //        });
-  //    });
-  //
-  //  });
-  //
-  //});
-  //
+  describe('Category - Test method: show', function () {
+
+    var userArray;
+    var companyArray;
+    var categoryArray;
+    var company;
+    var user;
+    var category;
+    var authToken;
+
+    // remove all Category, Company, User from DB to start with a clean environment
+    before(function (done) {
+      utils.mongooseRemoveAll([Category, Company, User], done);
+    });
+
+    // set user data
+    before(function (done) {
+      userArray = _.clone(userTemplateArray);
+
+      utils.mongooseCreate(User, userArray, function (err, insertedArray) {
+        if (err) return done(err);
+        insertedArray.forEach(function (element, index) {
+          userArray[index] = element;
+        });
+        return done();
+      });
+    });
+
+    // set company data
+    before(function (done) {
+      companyArray = _.clone(companyTemplateArray);
+
+      companyArray[0].teamUsers.push(userArray[0]._id);
+      companyArray[0].purchaseUsers.push(userArray[1]._id);
+      companyArray[0].adminUsers.push(userArray[1]._id);
+
+      companyArray[0].teamUsers.push(userArray[2]._id);
+      companyArray[0].purchaseUsers.push(userArray[3]._id);
+      companyArray[0].adminUsers.push(userArray[3]._id);
+
+      companyArray[1].teamUsers.push(userArray[2]._id);
+      companyArray[1].purchaseUsers.push(userArray[3]._id);
+      companyArray[1].adminUsers.push(userArray[4]._id);
+
+      companyArray[1].teamUsers.push(userArray[4]._id);
+      companyArray[1].purchaseUsers.push(userArray[5]._id);
+      companyArray[1].adminUsers.push(userArray[5]._id);
+
+      utils.mongooseCreate(Company, companyArray, function (err, insertedArray) {
+        if (err) return done(err);
+        insertedArray.forEach(function (element, index) {
+          companyArray[index] = element;
+        });
+        return done();
+      });
+    });
+
+    // set category data
+    before(function (done) {
+      categoryArray = _.clone(categoryTemplateArray);
+
+      categoryArray[0]._company = companyArray[0]._id;
+      categoryArray[1]._company = companyArray[1]._id;
+      categoryArray[2]._company = companyArray[1]._id;
+
+      Category.create(categoryArray, function (err, insertedArray) {
+        if (err) return done(err);
+        insertedArray.forEach(function (element, index) {
+          categoryArray[index] = element;
+        });
+        return done();
+      });
+    });
+
+    // set company and user data for single company/user tests
+    before(function (done) {
+      company = companyArray[0];
+      user = userArray[1];
+      category = categoryArray[0];
+      done();
+    });
+
+    // remove all Category, Company, User from DB
+    after(function (done) {
+      utils.mongooseRemoveAll([Category, Company, User], done);
+    });
+
+    describe('Model test', function () {
+
+      it('should find the category', function (done) {
+        Category.findById(category._id, function (err, found) {
+          if (err) return done(err);
+          expect(found).to.be.an.instanceOf(Category);
+          expect(found._id.toString()).to.be.equal(category._id.toString());
+          return done();
+        });
+      });
+
+      it('should not find the category', function (done) {
+        Category.findById(mongoose.Types.ObjectId(), function (err, found) {
+          if (err) return done(err);
+          expect(found).to.be.null;
+          return done();
+        });
+      });
+
+    });
+
+    describe('Controller test', function () {
+
+      // login user
+      before(function (done) {
+//        user = userArray[1];
+        utils.restLogin(user.email, user.password, function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceOf(Object);
+          expect(res.body).to.have.property('token');
+          jsonwebtoken.verify(res.body.token, config.secrets.session, function (err, decoded) {
+            if (err) return done(err);
+            expect(decoded._id).to.be.equal('' + user._id);
+            authToken = res.body.token;
+            return done();
+          });
+        });
+      });
+
+      it('should find the category', function (done) {
+        request(app)
+          .get('/api/categories/' + categoryArray[0]._id)
+          .send()
+          .set('authorization', 'Bearer ' + authToken)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body).to.be.instanceof(Object);
+            expect(res.body._id.toString()).to.be.equal(categoryArray[0]._id.toString());
+            return done();
+          });
+      });
+
+      it('should not find the category by a fake id', function (done) {
+        request(app)
+          .get('/test/categories/your id here')
+          .set('authorization', 'Bearer ' + authToken)
+          .send()
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+      it('should not find the category by a fake id, even if well formatted', function (done) {
+        request(app)
+          .get('/test/categories/' + mongoose.Types.ObjectId())
+          .set('authorization', 'Bearer ' + authToken)
+          .send()
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+    });
+
+  });
+
   //describe('Category - Test method: update', function () {
   //
   //  var category;
@@ -583,92 +645,6 @@ describe('Category', function () {
   //
   //});
   //
-  //describe('Category - Test method: destroy', function () {
-  //
-  //  var category;
-  //
-  //  // set category test data
-  //  beforeEach(function (done) {
-  //    category = _.clone(categoryTemplate);
-  //    category._company = company._id;
-  //
-  //    Category.create(category, function (err, inserted) {
-  //      if (err) return done(err);
-  //      category = inserted;
-  //      return done();
-  //    });
-  //
-  //  });
-  //
-  //  // remove all companies from DB
-  //  afterEach(function (done) {
-  //    utils.mongooseRemoveAll([Category], done);
-  //  });
-  //
-  //  describe('Model test', function () {
-  //
-  //    it('should delete the category', function (done) {
-  //      category.remove(function (err) {
-  //        if (err) return done(err);
-  //        return done();
-  //      });
-  //    });
-  //
-  //  });
-  //
-  //  describe('Controller test', function () {
-  //
-  //    it('should delete the category', function (done) {
-  //      request(app)
-  //        .delete('/test/categories/' + category._id)
-  //        .send()
-  //        .expect(204)
-  //        //.expect('Content-Type', /json/)
-  //        .end(function (err, res) {
-  //          if (err) return done(err);
-  //          Category.count({'_id': category._id}, function (err, c) {
-  //            if (err) return done(err);
-  //            expect(c).to.be.equal(0);
-  //            return done();
-  //          });
-  //        });
-  //    });
-  //
-  //    it('should not delete the category with a fake id', function (done) {
-  //      request(app)
-  //        .delete('/test/categories/' + 'fake id')
-  //        .send()
-  //        .expect(404)
-  //        //.expect('Content-Type', /json/)
-  //        .end(function (err, res) {
-  //          if (err) return done(err);
-  //          Category.count({'_id': category._id}, function (err, c) {
-  //            if (err) return done(err);
-  //            expect(c).to.be.equal(1);
-  //            return done();
-  //          });
-  //        });
-  //    });
-  //
-  //    it('should not delete the category with a fake id, even if well formatted', function (done) {
-  //      request(app)
-  //        .delete('/test/categories/' + mongoose.Types.ObjectId())
-  //        .send()
-  //        .expect(404)
-  //        //.expect('Content-Type', /json/)
-  //        .end(function (err, res) {
-  //          if (err) return done(err);
-  //          Category.count({'_id': category._id}, function (err, c) {
-  //            if (err) return done(err);
-  //            expect(c).to.be.equal(1);
-  //            return done();
-  //          });
-  //        });
-  //    });
-  //
-  //  });
-  //
-  //});
 
 });
 

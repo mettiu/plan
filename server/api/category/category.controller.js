@@ -31,9 +31,6 @@ exports.create = function (req, res, next) {
  * @param next
  */
 exports.index = function (req, res, next) {
-
-  // TODO: add a second querystring parameter to fllter only categories from one company
-
   req.user.findCompanies(req.options, function(err, companyList) {
     if (err) return next(err);
     if (companyList.length === 0) return res.status(200).json([]);
@@ -44,9 +41,6 @@ exports.index = function (req, res, next) {
   });
 
 };
-
-
-
 
 /**
  * List active categories, filtering by category name. Category name is got from query 'value' parameter.
@@ -99,7 +93,7 @@ exports.update = function (req, res, next) {
   if (req.body._id) {
     delete req.body._id;
   }
-  Category.findById(req.params.id, function (err, category) {
+  Category.findById(req.params.CategoryId, function (err, category) {
     if (err) {
       return next(err);
     }

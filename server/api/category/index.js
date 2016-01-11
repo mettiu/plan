@@ -11,18 +11,17 @@ var router = express.Router();
 router.param('CategoryId', auth.attachCompanyFromParam(Category));
 
 var mdwCategoryAdminArray = [
-  auth.getTokenFromQuery,
-  auth.jwtMiddleware,
-  auth.attachUserToRequest,
-  auth.attachCompanyFromBody,
-  auth.isAdminForTargetCompany
-];
-
-var mdwUserArray = [
-  auth.getTokenFromQuery,
-  auth.jwtMiddleware,
-  auth.attachUserToRequest
-];
+    auth.getTokenFromQuery,
+    auth.jwtMiddleware,
+    auth.attachUserToRequest,
+    auth.attachCompanyFromBody,
+    auth.isAdminForTargetCompany
+  ],
+  mdwUserArray = [
+    auth.getTokenFromQuery,
+    auth.jwtMiddleware,
+    auth.attachUserToRequest
+  ];
 
 router.post('/',
   mdwCategoryAdminArray,
@@ -40,16 +39,11 @@ router.get('/',
   mdwUserArray,
   controller.optionsMdw,
   controller.index);
-//TODO: index dovrebbe restituire solo le category delle mie company
 
 router.get('/:CategoryId',
   mdwUserArray,
   auth.isAllowedForTargetCompany,
   controller.show);
-
-//router.post('/issue', controller.issue);
-//router.get('/check', controller.check);
-//router.post('/passwordChange', controller.passwordChange);
 
 errorMiddleware(router);
 

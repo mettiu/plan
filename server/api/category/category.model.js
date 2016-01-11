@@ -27,11 +27,11 @@ var CategorySchema = new Schema({
     type: Boolean,
     default: true
   },
-  purchaseUsers: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  }]
+  //purchaseUsers: [{
+  //  type: Schema.Types.ObjectId,
+  //  ref: 'User',
+  //  required: true
+  //}]
 });
 
 CategorySchema.plugin(timestamps, {

@@ -366,89 +366,11 @@ describe('Category', function () {
 
   describe('Category - Test method: show', function () {
 
-    var userArray;
-    var companyArray;
-    var categoryArray;
-    var company;
-    var user;
     var category;
-    var authToken;
 
-    // remove all Category, Company, User from DB to start with a clean environment
     before(function (done) {
-      utils.mongooseRemoveAll([Category, Company, User], done);
-    });
-
-    // set user data
-    before(function (done) {
-      userArray = _.clone(userTemplateArray);
-
-      utils.mongooseCreate(User, userArray, function (err, insertedArray) {
-        if (err) return done(err);
-        insertedArray.forEach(function (element, index) {
-          userArray[index] = element;
-        });
-        return done();
-      });
-    });
-
-    // set company data
-    before(function (done) {
-      companyArray = _.clone(companyTemplateArray);
-
-      companyArray[0].teamUsers.push(userArray[0]._id);
-      companyArray[0].purchaseUsers.push(userArray[1]._id);
-      companyArray[0].adminUsers.push(userArray[1]._id);
-
-      companyArray[0].teamUsers.push(userArray[2]._id);
-      companyArray[0].purchaseUsers.push(userArray[3]._id);
-      companyArray[0].adminUsers.push(userArray[3]._id);
-
-      companyArray[1].teamUsers.push(userArray[2]._id);
-      companyArray[1].purchaseUsers.push(userArray[3]._id);
-      companyArray[1].adminUsers.push(userArray[4]._id);
-
-      companyArray[1].teamUsers.push(userArray[4]._id);
-      companyArray[1].purchaseUsers.push(userArray[5]._id);
-      companyArray[1].adminUsers.push(userArray[5]._id);
-
-      utils.mongooseCreate(Company, companyArray, function (err, insertedArray) {
-        if (err) return done(err);
-        insertedArray.forEach(function (element, index) {
-          companyArray[index] = element;
-        });
-        return done();
-      });
-    });
-
-    // set category data
-    before(function (done) {
-      categoryArray = _.clone(categoryTemplateArray);
-
-      categoryArray[0]._company = companyArray[0]._id;
-      categoryArray[1]._company = companyArray[1]._id;
-      categoryArray[2]._company = companyArray[1]._id;
-
-      Category.create(categoryArray, function (err, insertedArray) {
-        if (err) return done(err);
-        insertedArray.forEach(function (element, index) {
-          categoryArray[index] = element;
-        });
-        return done();
-      });
-    });
-
-    // set company and user data for single company/user tests
-    before(function (done) {
-      company = companyArray[0];
-      user = userArray[1];
       category = categoryArray[0];
       done();
-    });
-
-    // remove all Category, Company, User from DB
-    after(function (done) {
-      utils.mongooseRemoveAll([Category, Company, User], done);
     });
 
     describe('Model test', function () {
@@ -535,116 +457,93 @@ describe('Category', function () {
 
   });
 
-  //describe('Category - Test method: update', function () {
-  //
-  //  var category;
-  //  var userArray;
-  //
-  //  // set users test data
-  //  before(function (done) {
-  //    userArray = _.clone(userTemplateArray);
-  //
-  //    User.create(userArray, function (err, insertedArray) {
-  //      if (err) return done(err);
-  //      insertedArray.forEach(function (item, i) {
-  //        userArray[i] = item;
-  //      });
-  //      return done();
-  //    });
-  //
-  //  });
-  //
-  //  // set category test data
-  //  beforeEach(function (done) {
-  //    category = _.clone(categoryTemplate);
-  //    category._company = company._id;
-  //    category.purchaseUsers = [userArray[0]._id, userArray[1]._id];
-  //
-  //    Category.create(category, function (err, inserted) {
-  //      if (err) return done(err);
-  //      category = inserted;
-  //      return done();
-  //    });
-  //  });
-  //
-  //  // prepare category test data
-  //  beforeEach(function (done) {
-  //    category.purchaseUsers = [userArray[0]._id];
-  //    return done();
-  //  });
-  //
-  //  // remove all companies from DB
-  //  afterEach(function (done) {
-  //    utils.mongooseRemoveAll([Category], done);
-  //  });
-  //
-  //  // remove all categories and users from DB
-  //  after(function (done) {
-  //    utils.mongooseRemoveAll([Category, User], done);
-  //  });
-  //
-  //  describe('Model test', function () {
-  //
-  //    it('should update the category', function (done) {
-  //      expect(category.purchaseUsers).to.have.length(1);
-  //      category.save(function (err, saved) {
-  //        if (err) return done(err);
-  //        expect(saved).to.be.an.instanceOf(Category);
-  //        expect(saved).to.have.property('_id', category._id);
-  //        expect(saved.purchaseUsers).to.have.length(1);
-  //        return done();
-  //      });
-  //    });
-  //
-  //  });
-  //
-  //  describe('Controller test', function () {
-  //
-  //    it('should update the category', function (done) {
-  //      expect(category.purchaseUsers).to.have.length(1);
-  //      request(app)
-  //        .put('/test/categories/' + category._id)
-  //        .send(category)
-  //        .expect(200)
-  //        .expect('Content-Type', /json/)
-  //        .end(function (err, res) {
-  //          if (err) return done(err);
-  //          expect(res.body).to.have.property('_id', category._id.toString());
-  //          expect(res.body.purchaseUsers).to.have.length(1);
-  //          return done();
-  //        });
-  //    });
-  //
-  //    it('should not update the category if a fake id is sent', function (done) {
-  //      expect(category.purchaseUsers).to.have.length(1);
-  //      request(app)
-  //        .put('/test/categories/' + 'fake id')
-  //        .send(category)
-  //        .expect(404)
-  //        //.expect('Content-Type', /json/)
-  //        .end(function (err, res) {
-  //          if (err) return done(err);
-  //          return done();
-  //        });
-  //    });
-  //
-  //    it('should not update the category if a fake id is sent, even id it\'s a valid objectId', function (done) {
-  //      expect(category.purchaseUsers).to.have.length(1);
-  //      request(app)
-  //        .put('/test/categories/' + mongoose.Types.ObjectId())
-  //        .send(category)
-  //        .expect(404)
-  //        //.expect('Content-Type', /json/)
-  //        .end(function (err, res) {
-  //          if (err) return done(err);
-  //          return done();
-  //        });
-  //    });
-  //
-  //  });
-  //
-  //});
-  //
+  describe('Category - Test method: update', function () {
+
+    var category;
+    var newName = 'New Name';
+
+
+    // set company and user data for single company/user tests
+    before(function (done) {
+      category = categoryArray[0];
+      done();
+    });
+
+    describe('Model test', function () {
+
+      it('should update the category', function (done) {
+        category.name = 'New Name';
+        category.save(function (err, saved) {
+          if (err) return done(err);
+          expect(saved).to.be.an.instanceOf(Category);
+          expect(saved).to.have.property('_id', category._id);
+          expect(saved.name).to.be.equal('New Name');
+          return done();
+        });
+      });
+
+    });
+
+    describe('Controller test', function () {
+
+      // login user
+      before(function (done) {
+//        user = userArray[1];
+        utils.restLogin(user.email, user.password, function (err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceOf(Object);
+          expect(res.body).to.have.property('token');
+          jsonwebtoken.verify(res.body.token, config.secrets.session, function (err, decoded) {
+            if (err) return done(err);
+            expect(decoded._id).to.be.equal('' + user._id);
+            authToken = res.body.token;
+            return done();
+          });
+        });
+      });
+
+      it('should update the category', function (done) {
+        category.name = newName;
+        request(app)
+          .put('/api/categories/' + category._id)
+          .set('authorization', 'Bearer ' + authToken)
+          .send(category)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            expect(res.body.name).to.be.equal(newName);
+            return done();
+          });
+      });
+
+      it('should not update the category if a fake id is sent', function (done) {
+        request(app)
+          .put('/test/categories/' + 'fake id')
+          .send(category)
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+      it('should not update the category if a fake id is sent, even id it\'s a valid objectId', function (done) {
+        request(app)
+          .put('/test/categories/' + mongoose.Types.ObjectId())
+          .send(category)
+          .expect(404)
+          //.expect('Content-Type', /json/)
+          .end(function (err, res) {
+            if (err) return done(err);
+            return done();
+          });
+      });
+
+    });
+
+  });
 
 });
 

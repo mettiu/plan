@@ -44,6 +44,7 @@ router.get('/',
 
 router.get('/:CategoryId',
   mdwUserArray,
+  auth.isAllowedForTargetCompany,
   controller.show);
 
 //router.post('/issue', controller.issue);

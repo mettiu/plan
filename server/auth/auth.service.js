@@ -184,6 +184,26 @@ function isAdminForTargetCompany(req, res, next) {
 }
 
 /**
+ * Checks if req.user is allowed for req.company.
+ * Allowed means that the user is present either in
+ * adminUsers, purchadeUsers or teamUsers.
+ * This middleware expects to find req.user and req.company.
+ * If req.company._id is not found in req.user._adminCompanies,
+ * http 401 'Unauthorized' is returned. Otherwise calls next().
+ * @param req
+ * @param res
+ * @param next
+ */
+function isAllowedForTargetCompany(req, res, next) {
+  var allCompanies = req.company.adminUsers.concat(req.company.purchaseUsers, req.company.teamUsers);
+  var found = _.find(allCompanies, function (_user) {
+    return _user.toString() === req.user._id.toString();
+  });
+  if (!found) return res.status(401).send('Unauthorized');
+  next();
+}
+
+/**
  * Checks if the user role meets the minimum requirements of the route
  * DEPRECATED
  */
@@ -300,4 +320,5 @@ exports.jwtMiddleware = jwtMiddleware;
 //exports.attachTargetCompanyFromParamToRequest = attachTargetCompanyFromParamToRequest;
 exports.attachCompanyFromBody = attachCompanyFromBody;
 exports.isAdminForTargetCompany = isAdminForTargetCompany;
+exports.isAllowedForTargetCompany = isAllowedForTargetCompany;
 exports.attachCompanyFromParam = attachCompanyFromParam;

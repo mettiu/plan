@@ -42,6 +42,10 @@ router.get('/',
   controller.index);
 //TODO: index dovrebbe restituire solo le category delle mie company
 
+router.get('/:CategoryId',
+  mdwUserArray,
+  controller.show);
+
 //router.post('/issue', controller.issue);
 //router.get('/check', controller.check);
 //router.post('/passwordChange', controller.passwordChange);

@@ -8,7 +8,7 @@ var express = require('express'),
 
 var router = express.Router();
 
-router.param('CategoryId', auth.attachCompanyFromParam(Category));
+router.param('Id', auth.attachCompanyFromParam(Category));
 
 var mdwCategoryAdminArray = [
     auth.getTokenFromQuery,
@@ -16,8 +16,8 @@ var mdwCategoryAdminArray = [
     auth.attachUserToRequest,
     auth.attachCompanyFromBody,
     auth.isAdminForTargetCompany
-  ],
-  mdwUserArray = [
+  ];
+var mdwUserArray = [
     auth.getTokenFromQuery,
     auth.jwtMiddleware,
     auth.attachUserToRequest
@@ -27,11 +27,11 @@ router.post('/',
   mdwCategoryAdminArray,
   controller.create);
 
-router.delete('/:CategoryId',
+router.delete('/:Id',
   mdwCategoryAdminArray,
   controller.destroy);
 
-router.put('/:CategoryId',
+router.put('/:Id',
   mdwCategoryAdminArray,
   controller.update);
 
@@ -40,7 +40,7 @@ router.get('/',
   controller.optionsMdw,
   controller.index);
 
-router.get('/:CategoryId',
+router.get('/:Id',
   mdwUserArray,
   auth.isAllowedForTargetCompany,
   controller.show);

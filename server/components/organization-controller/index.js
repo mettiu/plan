@@ -77,7 +77,6 @@ var OrganizationController = function (model) {
   };
 
   OrganizationController.prototype.destroy = function (req, res, next) {
-    // TODO: this query could be unecessary: already done in attachCompanyFromParam middleware!
     m.findById(req.params.Id, function (err, found) {
       if (err) {
         return next(err);
@@ -106,7 +105,7 @@ var OrganizationController = function (model) {
     req.options = options;
     next();
   };
-  
+
 };
 
 module.exports = OrganizationController;

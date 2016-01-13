@@ -18,7 +18,7 @@ exports.create = orgController.create;
  * as a TeamUser or as an adminUser).
  * Accepts optional parameter req.query.onlyActive <boolean> to match only active
  * or inactive companies.
- * In case of success returns http code 200 with the array of companies found.
+ * In case of success returns http code 200 with the array of categories found.
  * @param req
  * @param res
  * @param next

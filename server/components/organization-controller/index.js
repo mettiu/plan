@@ -69,12 +69,7 @@ var OrganizationController = function(model) {
         return res.status(404).send('Not Found');
       }
 
-      // array properties are replaced with new ones
-      var updated = _.merge(found, req.body, function(from, to) {
-        if (_.isArray(from)) {
-          return to;
-        }
-      });
+      var updated = _.merge(found, req.body);
 
       updated.save(function(err) {
         if (err) {

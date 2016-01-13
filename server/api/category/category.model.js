@@ -44,14 +44,14 @@ CategorySchema
      * Find the array of categories which belong to companiesIdList.
      * Options is an object with those booleans:
      * - onlyActive: (default true) include even non active companies
-     * @param companiesIdList {array} companies ids to look for
+     * @param companiesIdList {array} companies ids to look for (accepts also
+     * one only individual item)
      * @param options {object} options
      * @param cb {function} to call with (err, resultList) parameters
      */
     findByCompanies: function(companiesIdList, options, cb) {
-
-      //TODO: check if companiesIdList is a valid Array
-      var query            = { _company: { $in: companiesIdList } };
+      var elements = [].concat(companiesIdList);
+      var query = { _company: { $in: elements } };
       var searchOnlyActive = true;
       if (typeof options.onlyActive === 'boolean' && !options.onlyActive) searchOnlyActive = false;
       if (searchOnlyActive) query.active = true;

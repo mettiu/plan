@@ -1,14 +1,38 @@
 'use strict';
 
-var
-  express = require('express'),
-  controller = require('./team.controller'),
-  config = require('../../config/environment'),
+var express = require('express');
+var controller = require('./team.controller');
+var Team = require('./team.model');
+var auth = require('../../auth/auth.service');
+var errorMiddleware = require('../../components/error-middleware');
 
-  router = express.Router();
+var router = express.Router();
 
-//router.post('/issue', controller.issue);
-//router.get('/check', controller.check);
-//router.post('/passwordChange', controller.passwordChange);
+router.param('Id', auth.attachCompanyFromParam(Team));
+
+var mdwAdminArray = [
+  auth.getTokenFromQuery,
+  auth.jwtMiddleware,
+  auth.attachUserToRequest,
+  auth.attachCompanyFromBody,
+  auth.isAdminForTargetCompany,
+];
+var mdwUserArray = [
+  auth.getTokenFromQuery,
+  auth.jwtMiddleware,
+  auth.attachUserToRequest,
+];
+
+router.post('/', mdwAdminArray, controller.create);
+
+router.delete('/:Id', mdwAdminArray, controller.destroy);
+
+router.put('/:Id', mdwAdminArray, controller.update);
+
+router.get('/', mdwUserArray, controller.optionsMdw, controller.index);
+
+router.get('/:Id', mdwUserArray, auth.isAllowedForTargetCompany, controller.show);
+
+errorMiddleware(router);
 
 module.exports = router;

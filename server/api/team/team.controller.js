@@ -1,10 +1,8 @@
 'use strict';
 
-var
-  _ = require('lodash'),
-  Team = require('./team.model'),
-  errors = require('../../components/errors');
-
+var Team = require('./team.model');
+var OrganizationController = require('../../components/organization-controller');
+var orgController = new OrganizationController(Team);
 
 /**
  * Creates new team in DB.
@@ -13,50 +11,19 @@ var
  * @param res
  * @param next
  */
-exports.create = function (req, res, next) {
-  Team.create(req.body, function (err, team) {
-    if (err) {
-      return next(err);
-    }
-    return res.status(201).json(team);
-  });
-};
+exports.create = orgController.create;
 
 /**
- * List teams. Accepts optional parameter req.body.active <boolean> to match only active
+ * List teams belonging to companies user has access to (as a purchaseUser,
+ * as a TeamUser or as an adminUser).
+ * Accepts optional parameter req.query.onlyActive <boolean> to match only active
  * or inactive companies.
- * In case of success returns http code 200 with the array of companies found.
- * @param req
- * @param res
- * @param next
- */
-exports.index = function (req, res, next) {
-  var query = {};
-  if (req.body.active !== undefined && typeof(req.body.active) === "boolean") query = {active: req.body.active};
-  Team.find(query, function (err, teams) {
-    if (err) {
-      return next(err);
-    }
-    return res.status(200).json(teams);
-  });
-};
-
-/**
- * List active teams, filtering by team name. Team name is got from query 'value' parameter.
- * Every team whose name starts with 'value' id found.
  * In case of success returns http code 200 with the array of teams found.
  * @param req
  * @param res
  * @param next
  */
-exports.find = function (req, res, next) {
-  Team.find({'name': new RegExp('^' + req.query.value, 'i'), active: true}, '_id name', function (err, teams) {
-    if (err) {
-      return next(err);
-    }
-    return res.status(200).json(teams);
-  });
-};
+exports.index = orgController.index;
 
 /**
  * Get details for one team, finding by Id.
@@ -67,17 +34,7 @@ exports.find = function (req, res, next) {
  * @param res
  * @param next
  */
-exports.show = function (req, res, next) {
-  Team.findById(req.params.id, function (err, team) {
-    if (err) {
-      return next(err);
-    }
-    if (!team) {
-      return res.status(404).send('Not Found');
-    }
-    return res.status(200).json(team);
-  });
-};
+exports.show = orgController.show;
 
 /**
  * Update a team by its Id.
@@ -88,32 +45,7 @@ exports.show = function (req, res, next) {
  * @param res
  * @param next
  */
-exports.update = function (req, res, next) {
-  if (req.body._id) {
-    delete req.body._id;
-  }
-  Team.findById(req.params.id, function (err, team) {
-    if (err) {
-      return next(err);
-    }
-    if (!team) {
-      return res.status(404).send('Not Found');
-    }
-
-    // array properties are replaced with new ones
-    var updated = _.merge(team, req.body, function (from, to) {
-      if (_.isArray(from)) {
-        return to;
-      }
-    });
-    updated.save(function (err) {
-      if (err) {
-        return next(err);
-      }
-      return res.status(200).json(updated);
-    });
-  });
-};
+exports.update = orgController.update;
 
 /**
  * Deletes from DB a Team, finding it by its Id.
@@ -123,19 +55,18 @@ exports.update = function (req, res, next) {
  * @param res
  * @param next
  */
-exports.destroy = function (req, res, next) {
-  Team.findById(req.params.id, function (err, team) {
-    if (err) {
-      return next(err);
-    }
-    if (!team) {
-      return res.status(404).send('Not Found');
-    }
-    team.remove(function (err) {
-      if (err) {
-        return next(err);
-      }
-      return res.status(204).send('No Content');
-    });
-  });
-};
+exports.destroy = orgController.destroy;
+
+/**
+ * Gets some options parameters from querystring and brings to a
+ * req.options object.
+ * Options is an object with those booleans:
+ * - admin: (default true) look into company's adminUsers array
+ * - team: (default true) look into company's teamUsers array
+ * - purchase: (default true) look into company's purchaseUsers array
+ * - onlyActive: (default true) include even non active companies
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.optionsMdw = orgController.optionsMdw;

@@ -1,115 +1,260 @@
 'use strict';
 
-var
-  express = require('express'),
-  chai = require('chai'),
-  expect = chai.expect,
-  _ = require('lodash'),
-  request = require('supertest'),
-  mongoose = require('mongoose'),
-  app = require('../../app'),
-  teamController = require('./team.controller.js'),
-  Team = require('./team.model'),
-  Company = require('../company/company.model'),
-  User = require('../user/user.model'),
-  utils = require('../../components/utils'),
-  errorMiddleware = require('../../components/error-middleware');
+var express = require('express');
+var chai = require('chai');
+var expect = chai.expect;
+var _ = require('lodash');
+var request = require('supertest');
+var mongoose = require('mongoose');
+var jsonwebtoken = require('jsonwebtoken');
+var app = require('../../app');
+var config = require('../../config/environment');
+var teamController = require('./team.controller.js');
+var Team = require('./team.model');
+var Company = require('../company/company.model');
+var User = require('../user/user.model');
+var utils = require('../../components/utils');
 
-function mountMiddleware() {
-  app.use('/test/teams', express.Router().post('/create', teamController.create));
-  app.use('/test/teams', express.Router().get('/', teamController.index));
-  app.use('/test/teams', express.Router().get('/find', teamController.find));
-  app.use('/test/teams', express.Router().get('/:id', teamController.show));
-  app.use('/test/teams', express.Router().put('/:id', teamController.update));
-  app.use('/test/teams', express.Router().delete('/:id', teamController.destroy));
-  errorMiddleware(app);
-}
-
-var teamTemplate = {
-  name: "test team",
-  description: "test team description"
-};
-
-var companyTemplate = {
-  name: "test company",
-  info: "test company info"
-};
-
-var userTemplateArray = [
-  {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'},
-  {provider: 'local', name: 'Fake User Two', email: 'testtwo@test.com', password: 'passwordtwo'}
+var teamTemplateArray = [
+  { name: 'test team', description: 'test team description', active: true },
+  { name: 'flower team', description: 'flower team description', active: true },
+  { name: 'dead team', description: 'flower team description', active: false },
 ];
 
-describe('Team controller', function () {
+var teamTemplate = _.clone(teamTemplateArray[0]);
 
+var companyTemplateArray = [
+  { name: 'test company', info: 'test company info', purchaseUsers: [], teamUsers: [], adminUsers: [] },
+  { name: 'flower company', info: 'flower company info', purchaseUsers: [], teamUsers: [], adminUsers: [] },
+];
+
+var userTemplateArray = [
+  { provider: 'local', name: 'Fake User 0', email: 'test1@test.com', password: 'password' },
+  { provider: 'local', name: 'Fake User 1', email: 'test2@test.com', password: 'password' },
+  { provider: 'local', name: 'Fake User 2', email: 'test3@test.com', password: 'password' },
+  { provider: 'local', name: 'Fake User 3', email: 'test4@test.com', password: 'password' },
+  { provider: 'local', name: 'Fake User 4', email: 'test5@test.com', password: 'password' },
+  { provider: 'local', name: 'Fake User 5', email: 'test6@test.com', password: 'password' },
+];
+
+describe('Team', function() {
+
+  var userArray;
+  var companyArray;
+  var teamArray;
   var company;
+  var user;
+  var authToken;
 
-  // remove all categories from DB to start with a clean environment
-  before(function (done) {
-    utils.mongooseRemoveAll([Team, Company], done);
+  // remove all Team, Company, User from DB to start with a clean environment
+  before(function(done) {
+    utils.mongooseRemoveAll([Team, Company, User], done);
   });
 
-  // create the company needed for category tests
-  before(function (done) {
-    company = _.clone(companyTemplate);
-    Company.create(company, function (err, created) {
+  // set user data
+  before(function(done) {
+    userArray = _.clone(userTemplateArray);
+
+    utils.mongooseCreate(User, userArray, function(err, insertedArray) {
       if (err) return done(err);
-      company = created;
+      insertedArray.forEach(function(element, index) {
+        userArray[index] = element;
+      });
+
       return done();
     });
   });
 
-  // set the test routes for this controller method
-  before(mountMiddleware);
+  // set company data
+  before(function(done) {
+    companyArray = _.clone(companyTemplateArray);
 
-  describe('Team - Test method: create', function () {
+    companyArray[0].teamUsers.push(userArray[0]._id);
+    companyArray[0].purchaseUsers.push(userArray[1]._id);
+    companyArray[0].adminUsers.push(userArray[1]._id);
+
+    companyArray[0].teamUsers.push(userArray[2]._id);
+    companyArray[0].purchaseUsers.push(userArray[3]._id);
+    companyArray[0].adminUsers.push(userArray[3]._id);
+
+    companyArray[1].teamUsers.push(userArray[2]._id);
+    companyArray[1].purchaseUsers.push(userArray[3]._id);
+    companyArray[1].adminUsers.push(userArray[4]._id);
+
+    companyArray[1].teamUsers.push(userArray[4]._id);
+    companyArray[1].purchaseUsers.push(userArray[5]._id);
+    companyArray[1].adminUsers.push(userArray[5]._id);
+
+    utils.mongooseCreate(Company, companyArray, function(err, insertedArray) {
+      if (err) return done(err);
+      insertedArray.forEach(function(element, index) {
+        companyArray[index] = element;
+      });
+
+      return done();
+    });
+  });
+
+  // set team data
+  before(function(done) {
+    teamArray = _.clone(teamTemplateArray);
+
+    teamArray[0]._company = companyArray[0]._id;
+    teamArray[1]._company = companyArray[1]._id;
+    teamArray[2]._company = companyArray[1]._id;
+
+    Team.create(teamArray, function(err, insertedArray) {
+      if (err) return done(err);
+      insertedArray.forEach(function(element, index) {
+        teamArray[index] = element;
+      });
+
+      return done();
+    });
+  });
+
+  // set company and user data for single company/user tests
+  before(function(done) {
+    company = companyArray[0];
+    user = userArray[1];
+    done();
+  });
+
+  // remove all Team, Company, User from DB
+  after(function(done) {
+    utils.mongooseRemoveAll([Team, Company, User], done);
+  });
+
+  describe('Team - Test method: create and destroy', function() {
 
     var team;
 
-    // set category variable with test data
-    before(function () {
-      team = _.clone(teamTemplate);
-      team._company = company._id;
-    });
+    describe('Model test', function() {
 
-    describe('Model test', function () {
-
-      // remove all teams from DB
-      after(function (done) {
-        utils.mongooseRemoveAll([Team], done);
+      // set team variable with test data
+      before(function() {
+        team = _.clone(teamTemplate);
+        team._company = company._id;
       });
 
-      it('should create a team', function (done) {
-        Team.create(team, function (err, created) {
+      it('should create a team', function(done) {
+        Team.create(team, function(err, created) {
           if (err) return done(err);
-          Team.count({}, function (err, count) {
+          Team.findById(created._id, function(err, found) {
             if (err) return done(err);
-            expect(count).to.be.equal(1);
+            team = found;
+            expect(found).to.be.instanceof(Team);
+            expect(found).to.have.property('_id');
             return done();
           });
         });
       });
 
-    });
-
-    describe('Controller test', function () {
-
-      // remove all teams from DB
-      after(function (done) {
-        utils.mongooseRemoveAll([Team], done);
+      it('should delete the team', function(done) {
+        team.remove(function(err) {
+          if (err) return done(err);
+          return done();
+        });
       });
 
-      it('should create team', function (done) {
+    });
+
+    describe('Controller test', function() {
+
+      // set team variable with test data
+      before(function() {
+        team = _.clone(teamTemplate);
+        team._company = company._id;
+      });
+
+      // login user
+      before(function(done) {
+        utils.restLogin(user.email, user.password, function(err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceOf(Object);
+          expect(res.body).to.have.property('token');
+          jsonwebtoken.verify(res.body.token, config.secrets.session, function(err, decoded) {
+            if (err) return done(err);
+            expect(decoded._id).to.be.equal('' + user._id);
+            authToken = res.body.token;
+            return done();
+          });
+        });
+      });
+
+      it('should create team', function(done) {
         request(app)
-          .post('/test/teams/create')
+          .post('/api/teams/')
+          .set('authorization', 'Bearer ' + authToken)
           .send(team)
           .expect(201)
           .expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
-            Team.count({}, function (err, count) {
+            Team.findById(res.body._id, function(err, found) {
               if (err) return done(err);
-              expect(count).to.be.equal(1);
+              team = found;
+              expect(found).to.be.instanceof(Team);
+              expect(found).to.have.property('_id');
+              return done();
+            });
+          });
+      });
+
+      it('should not delete the team with a fake id', function(done) {
+        request(app)
+          .delete('/api/teams/' + 'fake id')
+
+          // TODO: without auth, we should get a 401!!
+          .set('authorization', 'Bearer ' + authToken)
+          .send()
+          .expect(404)
+
+          //.expect('Content-Type', /json/)
+          .end(function(err, res) {
+            if (err) return done(err);
+            Team.findById(res.body._id, function(err, found) {
+              if (err) return done(err);
+              expect(found).to.be.null;
+              return done();
+            });
+          });
+      });
+
+      it('should not delete the team with a fake id, even if well formatted', function(done) {
+        request(app)
+          .delete('/api/teams/' + mongoose.Types.ObjectId())
+
+          // TODO: without auth, we should get a 401!!
+          .set('authorization', 'Bearer ' + authToken)
+          .send()
+          .expect(400)
+
+          //.expect('Content-Type', /json/)
+          .end(function(err, res) {
+            if (err) return done(err);
+            Team.findById(res.body._id, function(err, found) {
+              if (err) return done(err);
+              expect(found).to.be.null;
+              return done();
+            });
+          });
+      });
+
+      it('should delete the team', function(done) {
+        request(app)
+          .delete('/api/teams/' + team._id)
+          .set('authorization', 'Bearer ' + authToken)
+          .send()
+          .expect(204)
+
+          //.expect('Content-Type', /json/)
+          .end(function(err, res) {
+            if (err) return done(err);
+            Team.findById(res.body._id, function(err, found) {
+              if (err) return done(err);
+              team = found;
+              expect(found).to.be.null;
               return done();
             });
           });
@@ -119,110 +264,103 @@ describe('Team controller', function () {
 
   });
 
-  describe('Team - Test method: list and find', function () {
+  describe('Team - Test method: list and find', function() {
 
-    var teamList = [];
-    var listSize = 10;
+    describe('Model test', function() {
 
-    // set test data
-    before(function (done) {
-      var team = _.clone(teamTemplate);
-      team._company = company._id;
-      for (var i = 0; i < listSize; i++) {
-        teamList.push(_.clone(team));
-      }
-      teamList[0].active = false; // set one team as non-active
-      teamList[1].name = "flowers team";
-      utils.mongooseCreate(Team, teamList, done)
-    });
-
-    // remove all categories from DB
-    after(function (done) {
-      utils.mongooseRemoveAll([Team], done);
-    });
-
-    describe('Model test', function () {
-
-      it('should list teams', function (done) {
-        Team.find({active: true}, function (err, list) {
+      it('should list teams', function(done) {
+        Team.find({ active: true }, function(err, list) {
           if (err) return done(err);
           expect(list).to.be.instanceof(Array);
-          expect(list.length).to.be.equal(listSize - 1);
+          expect(list.length).to.be.equal(teamArray.length - 1);
           return done();
-        })
+        });
 
+      });
+
+      it('should list teams for companyArray[1]', function(done) {
+        Team.findByCompanies([companyArray[1]], { onlyActive: true }, function(err, list) {
+          if (err) return done(err);
+          expect(list).to.be.instanceof(Array);
+          expect(list.length).to.be.equal(1);
+          expect(list[0]._id.toString()).to.be.equal(teamArray[1]._id.toString());
+          return done();
+        });
+      });
+
+      it('should list teams for companyArray[1] - onlyActive: false', function(done) {
+        Team.findByCompanies([companyArray[1]], { onlyActive: false }, function(err, list) {
+          if (err) return done(err);
+          expect(list).to.be.instanceof(Array);
+          expect(list.length).to.be.equal(2);
+          return done();
+        });
       });
 
     });
 
-    describe('Controller test', function () {
+    describe('Controller test', function() {
 
-      it('should list all teams', function (done) {
+      // login user
+      before(function(done) {
+        user = userArray[3];
+        utils.restLogin(user.email, user.password, function(err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceOf(Object);
+          expect(res.body).to.have.property('token');
+          jsonwebtoken.verify(res.body.token, config.secrets.session, function(err, decoded) {
+            if (err) return done(err);
+            expect(decoded._id).to.be.equal('' + user._id);
+            authToken = res.body.token;
+            return done();
+          });
+        });
+      });
+
+      it('should list all teams - onlyActive: true (default)', function(done) {
+
         request(app)
-          .get('/test/teams')
+          .get('/api/teams')
+          .set('authorization', 'Bearer ' + authToken)
           .send()
           .expect(200)
           .expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
             expect(res.body).to.be.instanceof(Array);
-            expect(res.body.length).to.be.equal(listSize);
+            expect(res.body.length).to.be.equal(2);
             return done();
           });
       });
 
-      it('should list all active teams', function (done) {
+      it('should list all teams - onlyActive: false', function(done) {
+
         request(app)
-          .get('/test/teams')
-          .send({active: true})
+          .get('/api/teams?onlyActive=false')
+          .set('authorization', 'Bearer ' + authToken)
+          .send()
           .expect(200)
           .expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
             expect(res.body).to.be.instanceof(Array);
-            expect(res.body.length).to.be.equal(listSize - 1);
+            expect(res.body.length).to.be.equal(3);
             return done();
           });
       });
 
-      it('should list all active teams', function (done) {
+      it('should list all teams - only admin', function(done) {
+
         request(app)
-          .get('/test/teams')
-          .send({active: false})
+          .get('/api/teams?admin=true&purchase=false&team=false')
+          .set('authorization', 'Bearer ' + authToken)
+          .send()
           .expect(200)
           .expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
             expect(res.body).to.be.instanceof(Array);
             expect(res.body.length).to.be.equal(1);
-            return done();
-          });
-      });
-
-      it('should find all test active teams', function (done) {
-        request(app)
-          .get('/test/teams/find?value=test')
-          .send()
-          .expect(200)
-          .expect('Content-Type', /json/)
-          .end(function (err, res) {
-            if (err) return done(err);
-            expect(res.body).to.be.instanceof(Array);
-            expect(res.body.length).to.be.equal(listSize - 2);
-            return done();
-          });
-      });
-
-      it('should find all active teams (query parameter = \'\')', function (done) {
-        request(app)
-          .get('/test/teams/find?value=')
-          .send()
-          .expect(200)
-          .expect('Content-Type', /json/)
-          .end(function (err, res) {
-            if (err) return done(err);
-            expect(res.body).to.be.instanceof(Array);
-            expect(res.body.length).to.be.equal(listSize - 1);
             return done();
           });
       });
@@ -231,40 +369,28 @@ describe('Team controller', function () {
 
   });
 
-  describe('Team - Test method: show', function () {
+  describe('Team - Test method: show', function() {
 
     var team;
 
-    // set team test data
-    before(function (done) {
-      team = _.clone(teamTemplate);
-      team._company = company._id;
-
-      Team.create(team, function (err, inserted) {
-        if (err) return done(err);
-        team = inserted;
-        return done();
-      });
-
+    before(function(done) {
+      team = teamArray[0];
+      done();
     });
 
-    // remove all categories from DB
-    after(function (done) {
-      utils.mongooseRemoveAll([Team], done);
-    });
+    describe('Model test', function() {
 
-    describe('Model test', function () {
-
-      it('should find the team', function (done) {
-        Team.findById(team._id, function (err, found) {
+      it('should find the team', function(done) {
+        Team.findById(team._id, function(err, found) {
           if (err) return done(err);
           expect(found).to.be.an.instanceOf(Team);
+          expect(found._id.toString()).to.be.equal(team._id.toString());
           return done();
         });
       });
 
-      it('should not find the team', function (done) {
-        Team.findById(mongoose.Types.ObjectId(), function (err, found) {
+      it('should not find the team', function(done) {
+        Team.findById(mongoose.Types.ObjectId(), function(err, found) {
           if (err) return done(err);
           expect(found).to.be.null;
           return done();
@@ -273,41 +399,62 @@ describe('Team controller', function () {
 
     });
 
-    describe('Controller test', function () {
+    describe('Controller test', function() {
 
-      it('should find the team', function (done) {
+      // login user
+      before(function(done) {
+        //        user = userArray[1];
+        utils.restLogin(user.email, user.password, function(err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceOf(Object);
+          expect(res.body).to.have.property('token');
+          jsonwebtoken.verify(res.body.token, config.secrets.session, function(err, decoded) {
+            if (err) return done(err);
+            expect(decoded._id).to.be.equal('' + user._id);
+            authToken = res.body.token;
+            return done();
+          });
+        });
+      });
+
+      it('should find the team', function(done) {
         request(app)
-          .get('/test/teams/' + team._id)
+          .get('/api/teams/' + teamArray[0]._id)
           .send()
+          .set('authorization', 'Bearer ' + authToken)
           .expect(200)
           .expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
             expect(res.body).to.be.instanceof(Object);
-            expect(res.body._id.toString()).to.be.equal(team._id.toString());
+            expect(res.body._id.toString()).to.be.equal(teamArray[0]._id.toString());
             return done();
           });
       });
 
-      it('should not find the team by a fake id', function (done) {
+      it('should not find the team by a fake id', function(done) {
         request(app)
           .get('/test/teams/your id here')
+          .set('authorization', 'Bearer ' + authToken)
           .send()
           .expect(404)
+
           //.expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
             return done();
           });
       });
 
-      it('should not find the team by a fake id, even if well formatted', function (done) {
+      it('should not find the team by a fake id, even if well formatted', function(done) {
         request(app)
           .get('/test/teams/' + mongoose.Types.ObjectId())
+          .set('authorization', 'Bearer ' + authToken)
           .send()
           .expect(404)
+
           //.expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
             return done();
           });
@@ -317,196 +464,88 @@ describe('Team controller', function () {
 
   });
 
-  describe('Team - Test method: update', function () {
+  describe('Team - Test method: update', function() {
 
     var team;
-    var userArray;
+    var newName = 'New Name';
 
-    // set users test data
-    before(function (done) {
-      userArray = _.clone(userTemplateArray);
-
-      User.create(userArray, function (err, insertedArray) {
-        if (err) return done(err);
-        insertedArray.forEach(function (item, i) {
-          userArray[i] = item;
-        });
-        return done();
-      });
-
+    // set company and user data for single company/user tests
+    before(function(done) {
+      team = teamArray[0];
+      done();
     });
 
-    // set team test data
-    beforeEach(function (done) {
-      team = _.clone(teamTemplate);
-      team._company = company._id;
-      team.teamUsers = [userArray[0]._id, userArray[1]._id];
+    describe('Model test', function() {
 
-      Team.create(team, function (err, inserted) {
-        if (err) return done(err);
-        team = inserted;
-        return done();
-      });
-    });
-
-    // prepare team test data
-    beforeEach(function (done) {
-      team.teamUsers = [userArray[0]._id];
-      return done();
-    });
-
-    // remove all teams from DB
-    afterEach(function (done) {
-      utils.mongooseRemoveAll([Team], done);
-    });
-
-    // remove all teams and users from DB
-    after(function (done) {
-      utils.mongooseRemoveAll([Team, User], done);
-    });
-
-    describe('Model test', function () {
-
-      it('should update the team', function (done) {
-        expect(team.teamUsers).to.have.length(1);
-        team.save(function (err, saved) {
+      it('should update the team', function(done) {
+        team.name = 'New Name';
+        team.save(function(err, saved) {
           if (err) return done(err);
           expect(saved).to.be.an.instanceOf(Team);
           expect(saved).to.have.property('_id', team._id);
-          expect(saved.teamUsers).to.have.length(1);
+          expect(saved.name).to.be.equal('New Name');
           return done();
         });
       });
 
     });
 
-    describe('Controller test', function () {
+    describe('Controller test', function() {
 
-      it('should update the team', function (done) {
-        expect(team.teamUsers).to.have.length(1);
+      // login user
+      before(function(done) {
+        //        user = userArray[1];
+        utils.restLogin(user.email, user.password, function(err, res) {
+          if (err) return done(err);
+          expect(res.body).to.be.instanceOf(Object);
+          expect(res.body).to.have.property('token');
+          jsonwebtoken.verify(res.body.token, config.secrets.session, function(err, decoded) {
+            if (err) return done(err);
+            expect(decoded._id).to.be.equal('' + user._id);
+            authToken = res.body.token;
+            return done();
+          });
+        });
+      });
+
+      it('should update the team', function(done) {
+        team.name = newName;
         request(app)
-          .put('/test/teams/' + team._id)
+          .put('/api/teams/' + team._id)
+          .set('authorization', 'Bearer ' + authToken)
           .send(team)
           .expect(200)
           .expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
-            expect(res.body).to.have.property('_id', team._id.toString());
-            expect(res.body.teamUsers).to.have.length(1);
+            expect(res.body.name).to.be.equal(newName);
             return done();
           });
       });
 
-      it('should not update the team if a fake id is sent', function (done) {
-        expect(team.teamUsers).to.have.length(1);
+      it('should not update the team if a fake id is sent', function(done) {
         request(app)
           .put('/test/teams/' + 'fake id')
           .send(team)
           .expect(404)
+
           //.expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
             return done();
           });
       });
 
-      it('should not update the team if a fake id is sent, even id it\'s a valid objectId', function (done) {
-        expect(team.teamUsers).to.have.length(1);
+      it('should not update the team if a fake id is sent, even id it\'s a valid objectId', function(done) {
         request(app)
           .put('/test/teams/' + mongoose.Types.ObjectId())
           .send(team)
           .expect(404)
+
           //.expect('Content-Type', /json/)
-          .end(function (err, res) {
+          .end(function(err, res) {
             if (err) return done(err);
             return done();
-          });
-      });
-
-    });
-
-  });
-
-  describe('Team - Test method: destroy', function () {
-
-    var team;
-
-    // set team test data
-    beforeEach(function (done) {
-      team = _.clone(companyTemplate);
-      team._company = company._id;
-
-      Team.create(team, function (err, inserted) {
-        if (err) return done(err);
-        team = inserted;
-        return done();
-      });
-
-    });
-
-    // remove all companies from DB
-    afterEach(function (done) {
-      utils.mongooseRemoveAll([Team], done);
-    });
-
-    describe('Model test', function () {
-
-      it('should delete the team', function (done) {
-        team.remove(function (err) {
-          if (err) return done(err);
-          return done();
-        });
-      });
-
-    });
-
-    describe('Controller test', function () {
-
-      it('should delete the team', function (done) {
-        request(app)
-          .delete('/test/teams/' + team._id)
-          .send()
-          .expect(204)
-          //.expect('Content-Type', /json/)
-          .end(function (err, res) {
-            if (err) return done(err);
-            Team.count({'_id': team._id}, function (err, c) {
-              if (err) return done(err);
-              expect(c).to.be.equal(0);
-              return done();
-            });
-          });
-      });
-
-      it('should not delete the team with a fake id', function (done) {
-        request(app)
-          .delete('/test/teams/' + 'fake id')
-          .send()
-          .expect(404)
-          //.expect('Content-Type', /json/)
-          .end(function (err, res) {
-            if (err) return done(err);
-            Team.count({'_id': team._id}, function (err, c) {
-              if (err) return done(err);
-              expect(c).to.be.equal(1);
-              return done();
-            });
-          });
-      });
-
-      it('should not delete the team with a fake id, even if well formatted', function (done) {
-        request(app)
-          .delete('/test/teams/' + mongoose.Types.ObjectId())
-          .send()
-          .expect(404)
-          //.expect('Content-Type', /json/)
-          .end(function (err, res) {
-            if (err) return done(err);
-            Team.count({'_id': team._id}, function (err, c) {
-              if (err) return done(err);
-              expect(c).to.be.equal(1);
-              return done();
-            });
           });
       });
 
@@ -515,3 +554,65 @@ describe('Team controller', function () {
   });
 
 });
+
+describe('OptionsMdw test', function() {
+
+  var testPath = '/test/optionsMdw';
+
+  // set the test routes for this controller method
+  before(function() {
+    var router = express.Router();
+    router.use(teamController.optionsMdw);
+    app.use(testPath, router.get('/', returnReqData('options')));
+  });
+
+  it('optionsMdw test', function(done) {
+
+    var options = {
+      admin: true,
+      purchase: null,
+      team: false,
+      onlyActive: null,
+    };
+
+    request(app)
+      .get(testPath + setQueryString(options))
+      .send()
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(function(err, res) {
+        if (err) return done(err);
+        _.forEach(res.body, function(value, index) {
+          expect(value).to.be.equal(options[index] === null ? true : options[index]);
+        });
+
+        done();
+      });
+  });
+
+});
+
+/**
+ * Test function that returns req[name] as a response with http 200.
+ * If name is not passed, it defaults to 'target'.
+ * @param name
+ */
+function returnReqData(name) {
+  if (!name) name = 'target';
+  return function(req, res, next) {
+    if (!req[name]) return res.status(599).send('ERROR');
+    return res.status(200).json(req[name]);
+  };
+}
+
+function setQueryString(options) {
+  var queryString = '?';
+  _.forEach(options, function(value, key) {
+    queryString += key;
+    queryString += '=';
+    queryString += value;
+    queryString += '&';
+  });
+
+  return queryString.slice(0, -1);
+}

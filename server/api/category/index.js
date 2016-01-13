@@ -1,10 +1,10 @@
 'use strict';
 
-var express = require('express'),
-  controller = require('./category.controller'),
-  Category = require('./category.model'),
-  auth = require('../../auth/auth.service'),
-  errorMiddleware = require('../../components/error-middleware');
+var express = require('express');
+var controller = require('./category.controller');
+var Category = require('./category.model');
+var auth = require('../../auth/auth.service');
+var errorMiddleware = require('../../components/error-middleware');
 
 var router = express.Router();
 
@@ -15,35 +15,23 @@ var mdwCategoryAdminArray = [
     auth.jwtMiddleware,
     auth.attachUserToRequest,
     auth.attachCompanyFromBody,
-    auth.isAdminForTargetCompany
+    auth.isAdminForTargetCompany,
   ];
 var mdwUserArray = [
     auth.getTokenFromQuery,
     auth.jwtMiddleware,
-    auth.attachUserToRequest
+    auth.attachUserToRequest,
   ];
 
-router.post('/',
-  mdwCategoryAdminArray,
-  controller.create);
+router.post('/', mdwCategoryAdminArray, controller.create);
 
-router.delete('/:Id',
-  mdwCategoryAdminArray,
-  controller.destroy);
+router.delete('/:Id', mdwCategoryAdminArray, controller.destroy);
 
-router.put('/:Id',
-  mdwCategoryAdminArray,
-  controller.update);
+router.put('/:Id', mdwCategoryAdminArray, controller.update);
 
-router.get('/',
-  mdwUserArray,
-  controller.optionsMdw,
-  controller.index);
+router.get('/', mdwUserArray, controller.optionsMdw, controller.index);
 
-router.get('/:Id',
-  mdwUserArray,
-  auth.isAllowedForTargetCompany,
-  controller.show);
+router.get('/:Id', mdwUserArray, auth.isAllowedForTargetCompany, controller.show);
 
 errorMiddleware(router);
 

@@ -1,7 +1,7 @@
 'use strict';
 
-var mongoose = require('mongoose'),
-  Schema = mongoose.Schema;
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 var timestamps = require('mongoose-timestamp');
 var fileSchema = require('./ticket.file.schema');
 var eventSchema = require('./ticket.event.schema');
@@ -11,52 +11,50 @@ var TicketSchema = new Schema({
     type: String,
     minlength: 10,
     maxlength: 200,
-    required: true
+    required: true,
   },
   description: {
     type: String,
-    maxlength: 5000
+    maxlength: 5000,
   },
   _author: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
   },
   _lockingAgent:{
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
   },
   _company: {
     type: Schema.Types.ObjectId,
     ref: 'Company',
-    required: true
+    required: true,
   },
   _category: {
     type: Schema.Types.ObjectId,
     ref: 'Category',
-    required: true
+    required: true,
   },
   attachemnts: [fileSchema],
   _queue: {
     type: Schema.Types.ObjectId,
     ref: 'Queue',
-    required: true
+    required: true,
   },
   state: {
     type: String,
     enum: 'draft requested closed'.split(' '),
-    required: true
+    required: true,
   },
-  history: [eventSchema]
+  history: [eventSchema],
 });
 
 TicketSchema.plugin(timestamps, {
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
 });
 
-
 // TODO: validation rule for user's company === ticket company
-
 
 module.exports = mongoose.model('Ticket', TicketSchema);

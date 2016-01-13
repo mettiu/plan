@@ -1,93 +1,107 @@
 'use strict';
 
 var _ = require('lodash');
+var mongoose   = require('mongoose');
+var Category = require('../../api/category/category.model');
 
 /**
  * Abstracts Category and Team main models.
  * @param {(Category|Team)} model
  * @constructor
  */
-var OrganizationController = function (model) {
+var OrganizationController = function(model) {
 
-  // TODO: verificare che il model ricevuto sia un mongoose model, altrimenti throw
+  // Check if received 'model' is Category or Team
+  if (['Category', 'Team'].indexOf(model.modelName) === -1)
+    throw Error('OrganizationController should receive a valid Mongoose Model!');
 
   var m = model;
 
-  OrganizationController.prototype.getModel = function () {
+  OrganizationController.prototype.getModel = function() {
     return m;
   };
 
-  OrganizationController.prototype.create = function (req, res, next) {
-    m.create(req.body, function (err, created) {
+  OrganizationController.prototype.create = function(req, res, next) {
+    m.create(req.body, function(err, created) {
       if (err) {
         return next(err);
       }
+
       return res.status(201).json(created);
     });
   };
 
-  OrganizationController.prototype.index = function (req, res, next) {
+  OrganizationController.prototype.index = function(req, res, next) {
     req.user.findCompanies(req.options, function(err, companyList) {
       if (err) return next(err);
       if (companyList.length === 0) return res.status(200).json([]);
       m.findByCompanies(companyList, req.options, function(err, foundList) {
         if (err) return next(err);
         return res.status(200).json(foundList);
-      })
+      });
     });
   };
 
-  OrganizationController.prototype.show = function (req, res, next) {
-    m.findById(req.params.Id, function (err, found) {
+  OrganizationController.prototype.show = function(req, res, next) {
+    m.findById(req.params.Id, function(err, found) {
       if (err) {
         return next(err);
       }
+
       if (!found) {
         return res.status(404).send('Not Found');
       }
+
       return res.status(200).json(found);
     });
   };
 
-  OrganizationController.prototype.update = function (req, res, next) {
+  OrganizationController.prototype.update = function(req, res, next) {
     if (req.body._id) {
       delete req.body._id;
     }
-    m.findById(req.params.Id, function (err, found) {
+
+    m.findById(req.params.Id, function(err, found) {
       if (err) {
         return next(err);
       }
+
       if (!found) {
         return res.status(404).send('Not Found');
       }
 
       // array properties are replaced with new ones
-      var updated = _.merge(found, req.body, function (from, to) {
+      var updated = _.merge(found, req.body, function(from, to) {
         if (_.isArray(from)) {
           return to;
         }
       });
-      updated.save(function (err) {
+
+      updated.save(function(err) {
         if (err) {
           return next(err);
         }
+
         return res.status(200).json(updated);
       });
     });
   };
 
-  OrganizationController.prototype.destroy = function (req, res, next) {
-    m.findById(req.params.Id, function (err, found) {
+  OrganizationController.prototype.destroy = function(req, res, next) {
+    m.findById(req.params.Id, function(err, found) {
       if (err) {
         return next(err);
       }
+
       if (!found) {
         return res.status(404).send('Not Found');
       }
-      found.remove(function (err) {
+
+      found.remove(function(err) {
         if (err) {
           return next(err);
         }
+
         return res.status(204).send('No Content');
       });
     });

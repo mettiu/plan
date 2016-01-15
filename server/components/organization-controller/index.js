@@ -11,7 +11,7 @@ var Category = require('../../api/category/category.model');
 var OrganizationController = function(model) {
 
   // Check if received 'model' is Category or Team
-  if (['Category', 'Team'].indexOf(model.modelName) === -1)
+  if (['Category', 'Team', 'Ticket'].indexOf(model.modelName) === -1)
     throw Error('OrganizationController should receive a valid Mongoose Model!');
 
   var m = model;

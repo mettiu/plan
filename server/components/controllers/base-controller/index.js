@@ -7,7 +7,7 @@ var _ = require('lodash');
  * @param {(Category|Team)} model
  * @constructor
  */
-var BaseController = function(model) {
+function BaseController(model) {
 
   // Check if received 'model' is Category or Team
   if (['Category', 'Team', 'Ticket'].indexOf(model.modelName) === -1)

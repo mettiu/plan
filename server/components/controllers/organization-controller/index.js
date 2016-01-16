@@ -3,12 +3,12 @@
 var inherits = require('util').inherits;
 var BaseController = require('../base-controller');
 
-var OrganizationController = function(model) {
+function OrganizationController(model) {
   BaseController.call(this, model);
 
   BaseController.call(this, model);
 
-  BaseController.prototype.index = function(req, res, next) {
+  OrganizationController.prototype.index = function(req, res, next) {
     req.user.findCompanies(req.options, function(err, companyList) {
       if (err) return next(err);
       if (companyList.length === 0) return res.status(200).json([]);

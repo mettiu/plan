@@ -1,8 +1,8 @@
 'use strict';
 
 var Team = require('./team.model');
-var OrganizationController = require('../../components/organization-controller');
-var orgController = new OrganizationController(Team);
+var Controller = require('../../components/controllers/organization-controller');
+var controller = new Controller(Team);
 
 /**
  * Creates new team in DB.
@@ -11,7 +11,7 @@ var orgController = new OrganizationController(Team);
  * @param res
  * @param next
  */
-exports.create = orgController.create;
+exports.create = controller.create;
 
 /**
  * List teams belonging to companies user has access to (as a purchaseUser,
@@ -23,7 +23,7 @@ exports.create = orgController.create;
  * @param res
  * @param next
  */
-exports.index = orgController.index;
+exports.index = controller.index;
 
 /**
  * Get details for one team, finding by Id.
@@ -34,7 +34,7 @@ exports.index = orgController.index;
  * @param res
  * @param next
  */
-exports.show = orgController.show;
+exports.show = controller.show;
 
 /**
  * Update a team by its Id.
@@ -45,7 +45,7 @@ exports.show = orgController.show;
  * @param res
  * @param next
  */
-exports.update = orgController.update;
+exports.update = controller.update;
 
 /**
  * Deletes from DB a Team, finding it by its Id.
@@ -55,7 +55,7 @@ exports.update = orgController.update;
  * @param res
  * @param next
  */
-exports.destroy = orgController.destroy;
+exports.destroy = controller.destroy;
 
 /**
  * Gets some options parameters from querystring and brings to a
@@ -69,4 +69,4 @@ exports.destroy = orgController.destroy;
  * @param res
  * @param next
  */
-exports.optionsMdw = orgController.optionsMdw;
+exports.optionsMdw = controller.optionsMdw;

@@ -1,26 +1,25 @@
 'use strict';
 
 var _ = require('lodash');
-var Category = require('../../api/category/category.model');
 
 /**
  * Abstracts Category and Team main models.
  * @param {(Category|Team)} model
  * @constructor
  */
-var OrganizationController = function(model) {
+function BaseController(model) {
 
   // Check if received 'model' is Category or Team
-  if (['Category', 'Team'].indexOf(model.modelName) === -1)
-    throw Error('OrganizationController should receive a valid Mongoose Model!');
+  if (['Category', 'Team', 'Ticket'].indexOf(model.modelName) === -1)
+    throw Error('BaseController should receive a valid Mongoose Model!');
 
   var m = model;
 
-  OrganizationController.prototype.getModel = function() {
+  BaseController.prototype.getModel = function() {
     return m;
   };
 
-  OrganizationController.prototype.create = function(req, res, next) {
+  BaseController.prototype.create = function(req, res, next) {
     m.create(req.body, function(err, created) {
       if (err) {
         return next(err);
@@ -30,18 +29,7 @@ var OrganizationController = function(model) {
     });
   };
 
-  OrganizationController.prototype.index = function(req, res, next) {
-    req.user.findCompanies(req.options, function(err, companyList) {
-      if (err) return next(err);
-      if (companyList.length === 0) return res.status(200).json([]);
-      m.findByCompanies(companyList, req.options, function(err, foundList) {
-        if (err) return next(err);
-        return res.status(200).json(foundList);
-      });
-    });
-  };
-
-  OrganizationController.prototype.show = function(req, res, next) {
+  BaseController.prototype.show = function(req, res, next) {
     m.findById(req.params.Id, function(err, found) {
       if (err) {
         return next(err);
@@ -55,7 +43,7 @@ var OrganizationController = function(model) {
     });
   };
 
-  OrganizationController.prototype.update = function(req, res, next) {
+  BaseController.prototype.update = function(req, res, next) {
     if (req.body._id) {
       delete req.body._id;
     }
@@ -81,7 +69,7 @@ var OrganizationController = function(model) {
     });
   };
 
-  OrganizationController.prototype.destroy = function(req, res, next) {
+  BaseController.prototype.destroy = function(req, res, next) {
     m.findById(req.params.Id, function(err, found) {
       if (err) {
         return next(err);
@@ -101,7 +89,7 @@ var OrganizationController = function(model) {
     });
   };
 
-  OrganizationController.prototype.optionsMdw = function(req, res, next) {
+  BaseController.prototype.optionsMdw = function(req, res, next) {
     var options = {};
     req.query.onlyActive === 'true' ? options.onlyActive = true : options.onlyActive = false;
 
@@ -116,4 +104,4 @@ var OrganizationController = function(model) {
 
 };
 
-module.exports = OrganizationController;
+module.exports = BaseController;

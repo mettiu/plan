@@ -37,6 +37,7 @@ module.exports = function (app) {
   function validationError(err, req, res, next) {
     if (err.name !== 'ValidationError') return next(err);
     //TODO: check if something less than the whole error should be sent to client
+    console.log(err.stack);
     return res.status(422).json(err);
   }
 

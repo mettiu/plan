@@ -2,9 +2,7 @@
 
 var Category = require('./category.model');
 var Controller = require('../../components/controllers/organization-controller');
-//var ChildOC = require('../../components/organization-controller/test.js');
 var controller = new Controller(Category);
-//var child = new ChildOC(Category);
 
 /**
  * Creates new category in DB.

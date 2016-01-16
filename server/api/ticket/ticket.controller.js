@@ -1,8 +1,8 @@
 'use strict';
 
 var Ticket = require('./ticket.model');
-var OrganizationController = require('../../components/organization-controller');
-var orgController = new OrganizationController(Ticket);
+var BaseController = require('../../components/controllers/base-controller');
+var baseController = new BaseController(Ticket);
 
 // TODO: list tickets
 // TODO: lock a ticket
@@ -22,7 +22,7 @@ var orgController = new OrganizationController(Ticket);
  * @param res
  * @param next
  */
-exports.create = orgController.create;
+exports.create = baseController.create;
 
 /**
  * List tickets belonging to companies user has access to (as a purchaseUser,
@@ -34,7 +34,7 @@ exports.create = orgController.create;
  * @param res
  * @param next
  */
-exports.index = orgController.index;
+exports.index = baseController.index;
 
 /**
  * Get details for one category, finding by Id.
@@ -45,7 +45,7 @@ exports.index = orgController.index;
  * @param res
  * @param next
  */
-exports.show = orgController.show;
+exports.show = baseController.show;
 
 /**
  * Update a category by its Id.
@@ -56,7 +56,7 @@ exports.show = orgController.show;
  * @param res
  * @param next
  */
-exports.update = orgController.update;
+exports.update = baseController.update;
 
 /**
  * Deletes from DB a Category, finding it by its Id.
@@ -66,7 +66,7 @@ exports.update = orgController.update;
  * @param res
  * @param next
  */
-exports.destroy = orgController.destroy;
+exports.destroy = baseController.destroy;
 
 /**
  * Gets some options parameters from querystring and brings to a
@@ -80,4 +80,4 @@ exports.destroy = orgController.destroy;
  * @param res
  * @param next
  */
-exports.optionsMdw = orgController.optionsMdw;
+exports.optionsMdw = baseController.optionsMdw;

@@ -4,16 +4,10 @@ var Ticket = require('./ticket.model');
 var BaseController = require('../../components/controllers/base-controller');
 var baseController = new BaseController(Ticket);
 
-// TODO: list tickets
-// TODO: lock a ticket
-// TODO: unLock a ticket
-// TODO: create a new ticket
 // TODO: add attachment to ticket
 // TODO: delete attachment from ticket
 // TODO: add article to ticket
-// TODO: change queue to ticket
 // TODO: change state to ticket
-
 
 /**
  * Creates new ticket in DB.

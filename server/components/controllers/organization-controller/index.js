@@ -6,6 +6,7 @@ var BaseController = require('../base-controller');
 function OrganizationController(model) {
   BaseController.call(this, model);
 
+  //TODO: this is called twice!!
   BaseController.call(this, model);
 
   OrganizationController.prototype.index = function(req, res, next) {

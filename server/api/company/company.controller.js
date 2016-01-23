@@ -97,7 +97,7 @@ exports.update = function (req, res, next) {
     }
 
     // array properties are replaced with new ones
-    var updated = _.merge(company, req.body, function (from, to) {
+    var updated = _.mergeWith(company, req.body, function (from, to) {
       if (_.isArray(from)) {
         return to;
       }

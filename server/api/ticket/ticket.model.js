@@ -82,7 +82,7 @@ TicketSchema
    * @param cb {function} to call with (err, resultList) parameters
    */
   findByCategories: function(categoriesIdList, cb) {
-    var elements = _.pluck([].concat(categoriesIdList), '_id');
+    var elements = _.map([].concat(categoriesIdList), '_id');
     var query = { _category: { $in: elements } };
     this.find(query, cb);
   },

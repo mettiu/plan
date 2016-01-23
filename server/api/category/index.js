@@ -1,20 +1,18 @@
 'use strict';
 
 var express = require('express');
+var router = express.Router();
 var controller = require('./category.controller');
-var Category = require('./category.model');
 var auth = require('../../auth/auth.service');
 var errorMiddleware = require('../../components/error-middleware');
 
-var router = express.Router();
-
-router.param('Id', auth.attachCompanyFromParam(Category));
+router.param('Id', controller.attachCompanyFromParam);
 
 var mdwCategoryAdminArray = [
     auth.getTokenFromQuery,
     auth.jwtMiddleware,
     auth.attachUserToRequest,
-    auth.attachCompanyFromBody,
+    controller.attachCompanyFromBody,
     auth.isAdminForTargetCompany,
   ];
 var mdwUserArray = [

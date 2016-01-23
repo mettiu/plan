@@ -2,10 +2,12 @@
 
 var inherits = require('util').inherits;
 var conditional = require('express-conditional-middleware');
+var async = require('async');
 var BaseController = require('../base-controller');
+var Category = require('../../../api/category/category.model');
 var Company = require('../../../api/company/company.model');
 
-function OrganizationController(model) {
+function TicketController(model) {
   BaseController.call(this, model);
 
   /**
@@ -18,15 +20,25 @@ function OrganizationController(model) {
    * @param res
    * @param next
    */
-  OrganizationController.prototype.index = function(req, res, next) {
-    req.user.findCompanies(req.options, function(err, companyList) {
+  TicketController.prototype.index = function(req, res, next) {
+
+    async.waterfall([
+      findCompaniesByUser,
+      findCategoriesByCompanies,
+      findTicketsByCategories,
+    ], function(err, foundList) {
       if (err) return next(err);
-      if (companyList.length === 0) return res.status(200).json([]);
-      model.findByCompanies(companyList, req.options, function(err, foundList) {
-        if (err) return next(err);
-        return res.status(200).json(foundList);
-      });
+      return res.status(200).json(foundList);
     });
+    function findCompaniesByUser(callback) {
+      req.user.findCompanies(req.options,callback);
+    }
+    function findCategoriesByCompanies(companyList, callback) {
+      Category.findByCompanies(companyList, req.options, callback);
+    }
+    function findTicketsByCategories(categoryList, callback) {
+      model.findByCategories(categoryList, callback);
+    }
   };
 
   /**
@@ -38,26 +50,26 @@ function OrganizationController(model) {
    * @param model
    * @returns {Function} to be used in router.param call
    */
-  OrganizationController.prototype.attachCompanyFromParam = function(req, res, next, param) {
-    // TODO: this function gats called before user auth validation. Check user before sending any info, including a 404 if id is 'fake id'!
-    // with a unexistant objectId id, !found is fired;
-    // with a string id, we get a Mongoose CastError, which becones a 404
+  TicketController.prototype.attachCompanyFromParam = function(req, res, next, param) {
 
-    //// if mandatory model parameter is not set returns a middleware that crashes!
-    //if (!model) return function (res, req, next) {
-    //  return next(new Error("Missing model from function call!"))
-    //};
-    //return function (req, res, next, param) {
+    async.waterfall([
+      findModelByIdAndPopulateCategory,
+      findCompanyById,
+    ], function(err, result) {
+      if (err) return next(err);
+      req.company = result;
+      next();
+    });
+    function findModelByIdAndPopulateCategory(callback) {
       model
         .findById(param)
-        .populate('_company')
-        .exec(function (err, found) {
-          if (err) return next(err);
-          if (!found) return res.status(400).send("Bad Request");
-          req.company = found._company;
-          next();
-        });
-    //}
+        .populate('_category')
+        .exec(callback);
+    };
+    function findCompanyById(foundCategory, callback) {
+      if (!foundCategory) return res.status(400).send("Bad Request");
+      Company.findById(foundCategory._category._company, callback);
+    };
   };
 
   /**
@@ -80,7 +92,7 @@ function OrganizationController(model) {
    * @param res
    * @param next
    */
-  OrganizationController.prototype.attachCompanyFromBody = function() {
+  TicketController.prototype.attachCompanyFromBody = function() {
 
     // if parameter req.company is not already present,
     // then middleware is returned and tries to set company from body request
@@ -89,19 +101,21 @@ function OrganizationController(model) {
         return !!req.body && !req.company;
       },
       function (req, res, next) {
-        if (!req.body._company) return res.status(400).send("Bad Request");
-        Company.findById(req.body._company, function (err, company) {
-          if (err) return next(err);
-          if (!company) return res.status(400).send("Bad Request");
-          req.company = company;
-          next();
-        })
+        if (!req.body._category) return res.status(400).send("Bad Request");
+
+        Category
+          .findById(req.body._category)
+          .populate('_company')
+          .exec(function(err, foundCategory) {
+            if (err) return next(err);
+            req.company = foundCategory._company;
+            next();
+          });
       }
     );
   }();
-
 };
 
-inherits(OrganizationController, BaseController);
+inherits(TicketController, BaseController);
 
-module.exports = OrganizationController;
+module.exports = TicketController;

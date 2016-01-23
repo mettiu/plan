@@ -17,6 +17,8 @@ var
   User = require('../api/user/user.model'),
   Company = require('../api/company/company.model'),
   Category = require('../api/category/category.model');
+var OrganizationController = require('../components/controllers/organization-controller');
+var controller = new OrganizationController(Category);
 
 var userTemplate = {provider: 'local', name: 'Fake User One', email: 'testone@test.com', password: 'passwordone'};
 var companyTemplate = {name: "test company", info: "test company info", adminUsers: [], teamUsers: [], purchaseUsers: []};
@@ -397,7 +399,7 @@ describe('attachCompanyFromParam middleware test', function () {
   before(function () {
     var router = express.Router();
 
-    router.param('id', auth.attachCompanyFromParam(Category));
+    router.param('id', controller.attachCompanyFromParam);
 
     //one route to test the middleware with no parameter
     router.get('/',
@@ -510,7 +512,7 @@ describe('attachCompanyFromBody middleware test', function () {
   before(function () {
     var router = express.Router();
     router.use(
-      auth.attachCompanyFromBody
+      controller.attachCompanyFromBody
     );
     app.use(testPath, router.get('/', returnReqData('company')));
     errorMiddleware(router);
@@ -629,11 +631,11 @@ describe('isAdminForTargetCompany middleware test', function () {
       auth.getTokenFromQuery,
       auth.jwtMiddleware,
       auth.attachUserToRequest,
-      auth.attachCompanyFromBody,
+      controller.attachCompanyFromBody,
       auth.isAdminForTargetCompany
     ];
 
-    router.param('id', auth.attachCompanyFromParam(Category));
+    router.param('id', controller.attachCompanyFromParam);
 
     router.get('/',
       mdwArray,
@@ -643,7 +645,7 @@ describe('isAdminForTargetCompany middleware test', function () {
       auth.getTokenFromQuery,
       auth.jwtMiddleware,
       auth.attachUserToRequest,
-      auth.attachCompanyFromBody,
+      controller.attachCompanyFromBody,
       auth.isAdminForTargetCompany,
       returnReqData('company'));
 
@@ -881,11 +883,11 @@ describe('isAllowedForTargetCompany middleware test', function () {
       auth.getTokenFromQuery,
       auth.jwtMiddleware,
       auth.attachUserToRequest,
-      auth.attachCompanyFromBody,
+      controller.attachCompanyFromBody,
       auth.isAllowedForTargetCompany
     ];
 
-    router.param('id', auth.attachCompanyFromParam(Category));
+    router.param('id', controller.attachCompanyFromParam);
 
     router.get('/',
       mdwArray,

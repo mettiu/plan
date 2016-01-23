@@ -9,9 +9,11 @@ var config = require('../config/environment');
 var validateJwt = jwt({secret: config.secrets.session});
 var compose = require('composable-middleware');
 var _ = require('lodash');
+var Ticket = require('../api/ticket/ticket.model');
 
 var User = require('../api/user/user.model');
 var Company = require('../api/company/company.model');
+var Category = require('../api/category/category.model');
 
 /**
  * Attaches the user object to the request if authenticated
@@ -93,78 +95,6 @@ function attachUserToRequest(req, res, next) {
     next();
   });
 }
-
-/**
- * Attaches the company to req.
- * Returns a function to user in router.param for those
- * routes that accept model Id (Category or Test) as a param.
- * The param function sets the company corresponding to
- * _company for the model into a 'company' field in req.
- * @param model
- * @returns {Function} to be used in router.param call
- */
-function attachCompanyFromParam(model) {
-  // TODO: this function gats called before user auth validation. Check user before sending any info, including a 404 if id is 'fake id'!
-  // with a unexistant objectId id, !found is fired;
-  // with a string id, we get a Mongoose CastError, which becones a 404
-
-  // if mandatory model parameter is not set returns a middleware that crashes!
-  if (!model) return function (res, req, next) {
-    return next(new Error("Missing model from function call!"))
-  };
-  return function (req, res, next, param) {
-    model
-      .findById(param)
-      .populate('_company')
-      .exec(function (err, found) {
-        if (err) return next(err);
-        if (!found) return res.status(400).send("Bad Request");
-        req.company = found._company;
-        next();
-      });
-  }
-}
-
-/**
- * Attaches company data to req.
- * When an API related to something which has a _company (id) field
- * is called (i.e.: category or Team) you may want to extract the company
- * data, in order to allow further checks based on company data.
- * For example, you may want to check is the user requesting the
- * operation is an administrator for the category he is trying to
- * operate on (i.e.: creation, update, ecc.).
- * If company data is already present in req.body this middleware is skipped.
- * This middleware just expands company data from the req body _company field,
- * setting req.company with the data retrieved from DB.
- * Http 400 code is returned if:
- * - no _company field found;
- * - no company with the required _id found.
- * Any errors returned by Mongoose should be managed by following middlewares
- * (i.e.: CastError on _id).
- * @param req
- * @param res
- * @param next
- */
-function attachCompanyFromBodyFunction() {
-
-  // if parameter req.company is not already present,
-  // then middleware is returned and tries to set company from body request
-  return conditional(
-    function (req, res, next) {
-      return !!req.body && !req.company;
-    },
-    function (req, res, next) {
-      if (!req.body._company) return res.status(400).send("Bad Request");
-      Company.findById(req.body._company, function (err, company) {
-        if (err) return next(err);
-        if (!company) return res.status(400).send("Bad Request");
-        req.company = company;
-        next();
-      })
-    }
-  );
-}
-var attachCompanyFromBody = attachCompanyFromBodyFunction();
 
 /**
  * Checks if req.user is admin for req.company.
@@ -318,7 +248,7 @@ exports.getTokenFromQuery = getTokenFromQuery;
 exports.attachUserToRequest = attachUserToRequest;
 exports.jwtMiddleware = jwtMiddleware;
 //exports.attachTargetCompanyFromParamToRequest = attachTargetCompanyFromParamToRequest;
-exports.attachCompanyFromBody = attachCompanyFromBody;
+//exports.attachCompanyFromBody = attachCompanyFromBody;
 exports.isAdminForTargetCompany = isAdminForTargetCompany;
 exports.isAllowedForTargetCompany = isAllowedForTargetCompany;
-exports.attachCompanyFromParam = attachCompanyFromParam;
+//exports.attachCompanyFromParam = attachCompanyFromParam;

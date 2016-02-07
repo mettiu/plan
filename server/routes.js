@@ -7,9 +7,12 @@
 var config = require('./config/environment');
 var errors = require('./components/errors');
 var errorMiddleware = require('./components/error-middleware');
+var corsMiddleware = require('./components/cors-middleware');
 var path = require('path');
 
 module.exports = function(app) {
+
+  corsMiddleware(app);
 
   // Insert routes below
   app.use('/api/companies', require('./api/company'));
